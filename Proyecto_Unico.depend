@@ -13,7 +13,7 @@
 
 1470097274 source:/home/son/Proyectos/Manejo e Implementacion de Archivos/Proyecto_Unico/comandos.h
 
-1470145135 source:/home/son/git-repos/-MIA-201403775/main.c
+1470286754 source:/home/son/git-repos/-MIA-201403775/main.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
@@ -21,7 +21,7 @@
 
 1470097274 /home/son/git-repos/-MIA-201403775/comandos.h
 
-1470286719 source:/home/son/git-repos/-MIA-201403775/comandos.c
+1470327622 source:/home/son/git-repos/-MIA-201403775/comandos.c
 	<stdlib.h>
 	<string.h>
 	"comandos.h"

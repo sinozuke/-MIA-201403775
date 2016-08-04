@@ -5,12 +5,18 @@
 int parametros_mkdisk(char *token,int *p_size,int *p_unit,int *p_path,int *p_name);
 int longitud_real(char *a);
 char *valor_real(int a, char *b);
+char *ncomillas(char *a);
+int k_m(char *valor);
+
+
 void mkdisk(char *token)
 {
     char valor[500];
     char *valor_r;
-    int a;
+    char *path;
+    int valor_size;
     int p_size=0,p_unit=0,p_path=0,p_name=0;
+    int kilo_mega=2;
     token = strtok(NULL, " ");
     int i;
     while (token)
@@ -21,15 +27,33 @@ void mkdisk(char *token)
                     valor[i]=token[i+7];
                 valor[i]='\0';
                 valor_r = valor_real(longitud_real(&valor),valor);
-                sscanf(valor_r,"%d",&a);
-                printf("%i\n",a);
-                printf("%i\n",a+1);
+                sscanf(valor_r,"%d",&valor_size);
+                if(valor_size<=0){
+                    printf("ERROR: el valor \"%s\" para el aprametro size no es aceptado.\n",valor_r);
+                    return;
+                }
+                //aqui ya se tiene la cantidad de bytes que se desea del disco a crearse
                 break;
             case 2:
-                printf("parametro unit identificado");
+                for(i=0;token[i+7]!='\0';i++)
+                    valor[i]=token[i+7];
+                valor[i]='\0';
+                valor_r = valor_real(longitud_real(&valor),valor);
+                kilo_mega = k_m(valor_r);
+                printf("%i\n",kilo_mega);
+                if(kilo_mega==0){
+                    printf("el valor \"%s\" para el parametro unit no es aceptado.\n",valor_r);
+                    return;
+                }
                 break;
             case 3:
-                printf("parametro path identificado");
+                for(i=0;token[i+7]!='\0';i++)
+                    valor[i]=token[i+7];
+                valor[i]='\0';
+                valor_r = valor_real(longitud_real(&valor),valor);
+                valor_r = ncomillas(valor_r);
+                path = malloc(sizeof(char)*strlen(valor_r));
+                strcpy(path,valor_r);
                 break;
             case 4:
                 printf("parametro name identificado");
@@ -40,6 +64,24 @@ void mkdisk(char *token)
         }
         token = strtok(NULL, " ");
     }
+    if(p_size*p_path*p_name){
+
+    }else{
+        if(!p_size)
+            printf("",);
+        return;
+    }
+}
+
+char *ncomillas(char *a){
+    char *r = malloc(sizeof(char)*(strlen(a)-2));
+    int i;
+    for(i=0;a[i+1];i++){
+        if(a[i+1]!='\"'){
+            r[i]=a[i+1];
+        }
+    }
+    return r;
 }
 
 char *valor_real(int a, char *b){
@@ -77,6 +119,18 @@ void mount(char *token)
 void umount(char *token)
 {
 
+}
+
+int k_m(char *valor){
+    char *pos = strstr(valor,"m");
+    if(pos){
+        return 1;
+    }
+    pos = strstr(valor,"k");
+    if(pos){
+        return 2;
+    }
+    return 0;
 }
 
 int parametros_mkdisk(char *token,int *p_size,int *p_unit,int *p_path,int *p_name){
