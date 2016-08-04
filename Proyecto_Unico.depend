@@ -21,8 +21,16 @@
 
 1470097274 /home/son/git-repos/-MIA-201403775/comandos.h
 
-1470331659 source:/home/son/git-repos/-MIA-201403775/comandos.c
+1470340277 source:/home/son/git-repos/-MIA-201403775/comandos.c
 	<stdlib.h>
 	<string.h>
 	"comandos.h"
+	"func_generacion.h"
+
+1470340350 /home/son/git-repos/-MIA-201403775/func_generacion.h
+
+1470340456 source:/home/son/git-repos/-MIA-201403775/func_generacion.c
+	"func_generacion.h"
+
+1470340350 source:/home/son/git-repos/-MIA-201403775/func_generacion.h
 
