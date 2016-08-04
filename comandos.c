@@ -14,6 +14,7 @@ void mkdisk(char *token)
     char valor[500];
     char *valor_r;
     char *path;
+    char *nombre;
     int valor_size;
     int p_size=0,p_unit=0,p_path=0,p_name=0;
     int kilo_mega=2;
@@ -32,7 +33,6 @@ void mkdisk(char *token)
                     printf("ERROR: el valor \"%s\" para el aprametro size no es aceptado.\n",valor_r);
                     return;
                 }
-                //aqui ya se tiene la cantidad de bytes que se desea del disco a crearse
                 break;
             case 2:
                 for(i=0;token[i+7]!='\0';i++)
@@ -56,7 +56,12 @@ void mkdisk(char *token)
                 strcpy(path,valor_r);
                 break;
             case 4:
-                printf("parametro name identificado");
+                for(i=0;token[i+7]!='\0';i++)
+                    valor[i]=token[i+7];
+                valor[i]='\0';
+                valor_r = valor_real(longitud_real(&valor),valor);
+                nombre = malloc(sizeof(char)*strlen(valor_r));
+                strcpy(nombre,valor_r);
                 break;
             default:
                 printf("Error: el parametro \"%s\" no es reconocido\n",token);
@@ -65,10 +70,14 @@ void mkdisk(char *token)
         token = strtok(NULL, " ");
     }
     if(p_size*p_path*p_name){
-
+        printf("Tamaño:%i\nMedida:%i\nPath:%s\nNombre:%s\n",valor_size,kilo_mega,path,nombre);
     }else{
         if(!p_size)
-            printf("",);
+            printf("el parametro 'size' no se ha encontrado\n");
+        if(!p_name)
+            printf("el parametro 'name' no se ha encontrado\n");
+        if(!p_path)
+            printf("el parametro 'path' no se ha encontrado\n");
         return;
     }
 }
