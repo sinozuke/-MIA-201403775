@@ -3,5 +3,7 @@
 
 
 void generar_disco(char *nombre,char *path, int tamano, int tipo);
+void eliminar_disco(char *path);
+
 
 #endif // FUNC_GENERACION_H_INCLUDE
