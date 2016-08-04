@@ -19,7 +19,6 @@ int main()
         while (token) {
                 switch(opcion(token)){
                     case 1:
-                        printf("Comando Mkdisk invocado\n");
                         mkdisk(token);
                         break;
                     case 2:
