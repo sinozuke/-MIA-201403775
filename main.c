@@ -7,8 +7,6 @@
 char* token;
 char cadena[MAXLON+1];
 
-int opcion(char *token);
-
 int main()
 {
     while(1){
@@ -36,6 +34,9 @@ int main()
                     case 6:
                         printf("Comando Rep invocado\n");
                         break;
+                    case 7:
+                        printf("Comando Exec invocado\n");
+                        break;
                     default:
                         printf("ERROR: el comando \"%s\" no reconocido\n",token);
                         break;
@@ -44,20 +45,4 @@ int main()
                     token = strtok(NULL, " ");
         }
     }
-}
-
-int opcion(char *token){
-    if(strcmp(token, "mkdisk")==0)
-        return 1;
-    if(strcmp(token, "rmdisk")==0)
-        return 2;
-    if(strcmp(token, "fdisk")==0)
-        return 3;
-    if(strcmp(token, "mount")==0)
-        return 4;
-    if(strcmp(token, "umount")==0)
-        return 5;
-    if(strcmp(token, "rep")==0)
-        return 6;
-    return 0;
 }

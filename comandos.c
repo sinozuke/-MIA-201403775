@@ -19,7 +19,7 @@ void mkdisk(char *token)
     char *nombre;
     int valor_size;
     int p_size=0,p_unit=0,p_path=0,p_name=0;
-    int kilo_mega=2;
+    int kilo_mega=1;
     token = strtok(NULL, " ");
     int i;
     while (token)
@@ -140,6 +140,10 @@ void rep(char *token){
 
 }
 
+void exec(char *token){
+
+}
+
 int k_m(char *valor){
     char *pos = strstr(valor,"m");
     if(pos){
@@ -198,4 +202,22 @@ int longitud_real(char *a){
     while(a[i-1]!='\0')
         i++;
     return i-1;
+}
+
+int opcion(char *token){
+    if(strcmp(token, "mkdisk")==0)
+        return 1;
+    if(strcmp(token, "rmdisk")==0)
+        return 2;
+    if(strcmp(token, "fdisk")==0)
+        return 3;
+    if(strcmp(token, "mount")==0)
+        return 4;
+    if(strcmp(token, "umount")==0)
+        return 5;
+    if(strcmp(token, "rep")==0)
+        return 6;
+    if(strcmp(token, "exec")==0)
+        return 7;
+            return 0;
 }
