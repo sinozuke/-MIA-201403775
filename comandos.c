@@ -97,7 +97,10 @@ void mkdisk(char *token)
     if(p_size*p_path*p_name){
         printf("-------------CREANDO PARTICION-------------\n");
         printf("-------------------DATOS-------------------\n");
-        printf("Tamaño:\t%i\nMedida:\t%i\nPath:\t%s\nNombre:\t%s\n",valor_size,kilo_mega,path,nombre);
+        if(kilo_mega==1)
+            printf("Tamaño:\t%i\nMedida:\t%s\nPath:\t%s\nNombre:\t%s\n",valor_size,"Mb",path,nombre);
+        else
+            printf("Tamaño:\t%i\nMedida:\t%s\nPath:\t%s\nNombre:\t%s\n",valor_size,"Kb",path,nombre);
         printf("-----------------GENERANDO-----------------\n");
         generar_disco(nombre,path,valor_size,kilo_mega);
     }else{
