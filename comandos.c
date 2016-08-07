@@ -9,7 +9,7 @@ int longitud_real(char *a);
 char *valor_real(int a, char *b);
 char *ncomillas(char *a);
 int k_m(char *valor);
-
+int pasa(char *token,int opcino1,int opcion2);
 
 void mkdisk(char *token)
 {
@@ -27,6 +27,10 @@ void mkdisk(char *token)
         switch(parametros_mkdisk(token)){
             case 1:
                 if(!p_size){
+                    if(!pasa(token,1,0)){
+                        printf("ERROR: no se presenta el separador '::' entre el parametro 'size' y el valor.\n");
+                        return;
+                    }
                     for(i=0;token[i+7]!='\0';i++)
                         valor[i]=token[i+7];
                     valor[i]='\0';
@@ -44,6 +48,10 @@ void mkdisk(char *token)
                 break;
             case 2:
                 if(!p_unit){
+                    if(!pasa(token,1,0)){
+                        printf("ERROR: no se presenta el separador '::' entre el parametro 'unit' y el valor.\n");
+                        return;
+                    }
                     for(i=0;token[i+7]!='\0';i++)
                         valor[i]=token[i+7];
                     valor[i]='\0';
@@ -61,6 +69,14 @@ void mkdisk(char *token)
                 break;
             case 3:
                 if(!p_path){
+                    if(!pasa(token,1,0)){
+                        printf("ERROR: no se presenta el separador '::' entre el parametro 'path' y el valor.\n");
+                        return;
+                    }
+                    if(!pasa(token,0,1)){
+                        printf("ERROR: el valor del parametro 'path' no esta encerrado entre comillas.\n");
+                        return;
+                    }
                     for(i=0;token[i+7]!='\0';i++)
                         valor[i]=token[i+7];
                     valor[i]='\0';
@@ -76,6 +92,10 @@ void mkdisk(char *token)
                 break;
             case 4:
                 if(!p_name){
+                    if(!pasa(token,1,0)){
+                        printf("ERROR: no se presenta el separador '::' entre el parametro 'name' y el valor.\n");
+                        return;
+                    }
                     for(i=0;token[i+7]!='\0';i++)
                         valor[i]=token[i+7];
                     valor[i]='\0';
@@ -202,6 +222,28 @@ int longitud_real(char *a){
     while(a[i-1]!='\0')
         i++;
     return i-1;
+}
+
+int pasa(char *token,int opcion1,int opcion2){
+    int dos_puntos = 0;
+    int comillas =0;
+    int i;
+    for(i=0;token[i];i++)
+        if(token[i]==':')
+            dos_puntos++;
+        else if(token[i]=='\"')
+            comillas++;
+
+    if(opcion1)
+        if(dos_puntos==2)
+            return 1;
+        else
+            return 0;
+    else
+        if(comillas==2)
+            return 1;
+        else
+            return 0;
 }
 
 int opcion(char *token){
