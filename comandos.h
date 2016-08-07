@@ -6,5 +6,5 @@ void rmdisk(char *token);
 void fdisk(char *token);
 void mount(char *token);
 void umount(char *token);
-
+void rep(char *token);
 #endif // COMANDOS_H_INCLUDED

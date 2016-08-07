@@ -7,7 +7,7 @@ void eliminar_disco(char *path);
 void crear_pp();
 void crear_pl();
 void crear_pe();
-void mount_c();
+void mount_c(char *path,char *name);
 void umount_c();
 
 #endif // FUNC_GENERACION_H_INCLUDE

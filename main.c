@@ -33,6 +33,9 @@ int main()
                     case 5:
                         printf("Comando UMount invocado\n");
                         break;
+                    case 6:
+                        printf("Comando Rep invocado\n");
+                        break;
                     default:
                         printf("ERROR: el comando \"%s\" no reconocido\n",token);
                         break;
@@ -54,5 +57,7 @@ int opcion(char *token){
         return 4;
     if(strcmp(token, "umount")==0)
         return 5;
+    if(strcmp(token, "rep")==0)
+        return 6;
     return 0;
 }
