@@ -24,7 +24,7 @@ int main()
                         rmdisk(token);
                         break;
                     case 3:
-                        printf("Comando fdisk invocado\n");
+                        fdisk(token);
                         break;
                     case 4:
                         printf("Comando Mount invocado\n");

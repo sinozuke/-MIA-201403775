@@ -5,7 +5,7 @@
 #include "funciones.h"
 
 
-int parametros_mkdisk(char *token);
+int parametros(char *token);
 int longitud_real(char *a);
 char *valor_real(int a, char *b);
 char *ncomillas(char *a);
@@ -25,7 +25,7 @@ void mkdisk(char *token)
     token = strtok(NULL, " ");
     while (token)
     {
-        switch(parametros_mkdisk(token)){
+        switch(parametros(token)){
             case 1:
                 if(!p_size){
                     if(!pasa(token,1,0)){
@@ -141,8 +141,7 @@ void mkdisk(char *token)
     free(nombre);
 }
 
-void rmdisk(char *token)
-{
+void rmdisk(char *token){
     char valor[500];
     char *valor_r;
     char *path;
@@ -151,33 +150,31 @@ void rmdisk(char *token)
     int i;
     while (token)
     {
-        switch(parametros_mkdisk(token)){
-            case 3:
-                if(!p_path){
-                    if(!pasa(token,1,0)){
-                        printf("ERROR: no se presenta el separador '::' entre el parametro 'path' y el valor.\n");
-                        return;
-                    }
-                    if(!pasa(token,0,1)){
-                        printf("ERROR: el valor del parametro 'path' no esta encerrado entre comillas.\n");
-                        return;
-                    }
-                    for(i=0;token[i+7]!='\0';i++)
-                        valor[i]=token[i+7];
-                    valor[i]='\0';
-                    valor_r = valor_real(longitud_real(valor),valor);
-                    valor_r = ncomillas(valor_r);
-                    path = malloc(sizeof(char)*strlen(valor_r));
-                    strcpy(path,valor_r);
-                }else{
-                    printf("ERROR: Parametro 'path' declarado mas de una vez.\n");
+        if(parametros(token)==3){
+            if(!p_path){
+                if(!pasa(token,1,0)){
+                    printf("ERROR: no se presenta el separador '::' entre el parametro 'path' y el valor.\n");
                     return;
                 }
-                p_path = 1;
-                break;
-            default:
-                printf("Error: el parametro \"%s\" no es reconocido\n",token);
+                if(!pasa(token,0,1)){
+                    printf("ERROR: el valor del parametro 'path' no esta encerrado entre comillas.\n");
+                    return;
+                }
+                for(i=0;token[i+7]!='\0';i++)
+                    valor[i]=token[i+7];
+                valor[i]='\0';
+                valor_r = valor_real(longitud_real(valor),valor);
+                valor_r = ncomillas(valor_r);
+                path = malloc(sizeof(char)*strlen(valor_r));
+                strcpy(path,valor_r);
+            }else{
+                printf("ERROR: Parametro 'path' declarado mas de una vez.\n");
                 return;
+            }
+            p_path = 1;
+        }else{
+            printf("Error: el parametro \"%s\" no es reconocido\n",token);
+            return;
         }
         token = strtok(NULL, " ");
     }
@@ -192,6 +189,41 @@ void rmdisk(char *token)
 
 void fdisk(char *token)
 {
+    token = strtok(NULL, " ");
+    while (token)
+    {
+        printf("%s\n",token);
+        switch(parametros(token)){
+            case 1:
+                printf("Parametro 'size' reconocido.\n");
+                break;
+            case 2:
+                printf("Parametro 'unit' reconocido.\n");
+                break;
+            case 3:
+                printf("Parametro 'path' reconocido.\n");
+                break;
+            case 4:
+                printf("Parametro 'name' reconocido.\n");
+                break;
+            case 5:
+                printf("Parametro 'type' reconocido.\n");
+                break;
+            case 6:
+                printf("Parametro 'fit' reconocido.\n");
+                break;
+            case 7:
+                printf("Parametro 'delete' reconocido.\n");
+                break;
+            case 8:
+                printf("Parametro 'add' reconocido.\n");
+                break;
+            default:
+                printf("Parametro NO reconocido.\n");
+                break;
+        }
+        token = strtok(NULL, " ");
+    }
 
 }
 
@@ -227,7 +259,7 @@ int k_m(char *valor){
     return 0;
 }
 
-int parametros_mkdisk(char *token){
+int parametros(char *token){
     char *pos = strstr(token,"-size");
     if(pos){
         return 1;
@@ -243,6 +275,22 @@ int parametros_mkdisk(char *token){
     pos = strstr(token,"-name");
     if(pos){
         return 4;
+    }
+    pos = strstr(token,"+type");
+    if(pos){
+        return 5;
+    }
+    pos = strstr(token,"+fit");
+    if(pos){
+        return 6;
+    }
+    pos = strstr(token,"+delete");
+    if(pos){
+        return 7;
+    }
+    pos = strstr(token,"+add");
+    if(pos){
+        return 8;
     }
     return 0;
 }
