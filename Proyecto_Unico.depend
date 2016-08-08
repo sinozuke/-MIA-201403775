@@ -36,11 +36,13 @@
 
 1470340350 source:/home/son/git-repos/-MIA-201403775/func_generacion.h
 
-1470630573 source:/home/son/git-repos/-MIA-201403775/funciones.c
+1470643251 source:/home/son/git-repos/-MIA-201403775/funciones.c
 	<stdio.h>
 	<string.h>
 	<sys/types.h>
 	<sys/stat.h>
+	<time.h>
+	<stdlib.h>
 	<unistd.h>
 	"Datos.h"
 	"funciones.h"
@@ -49,6 +51,6 @@
 
 1470516833 source:/home/son/git-repos/-MIA-201403775/funciones.h
 
-1470610134 /home/son/git-repos/-MIA-201403775/Datos.h
+1470632623 /home/son/git-repos/-MIA-201403775/Datos.h
 	<time.h>
 
