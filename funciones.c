@@ -18,6 +18,7 @@ void generar_disco(char *nombre,char *path, int tamano, char tipo){
     strcpy(directorio,path);
     if(crear_directorios(path)==0){
         printf("ERROR: el valor ingresado para path es erroneo.\n");
+        printf("************GENERACION FALLIDA************\n\n");
         return;
     }
 
@@ -35,8 +36,11 @@ void generar_disco(char *nombre,char *path, int tamano, char tipo){
 
     if(!disco){
         printf("ERROR: el Disco no ha podido crearse.\n");
+        printf("************GENERACION FALLIDA************\n\n");
         return;
     }
+
+    printf("%c\n",tipo);
 
     if(tipo=='m')
         for(int j=0;j<tamano;j++)
@@ -47,8 +51,21 @@ void generar_disco(char *nombre,char *path, int tamano, char tipo){
                 fwrite(KiloByte,sizeof(char),1024,disco);
 
     fclose(disco);
-    printf("-----------------GENERANDO-----------------\n");
-    printf("************GENERACION COMPLETA************\n");
+    printf("************GENERACION COMPLETA************\n\n");
+}
+
+void eliminar_disco(char *path){
+    if(access(path,F_OK)==-1){
+        printf("ERROR: no exite el directorio o Disco con el nombre \"%s\"\n",path);
+        printf("********ELIMINACION DE DISCO FALLIDA********\n\n");
+        return;
+    }
+
+    if(unlink(path)==0){
+        printf("********ELIMINACION DE DISCO EXITOSA********\n\n");
+    }else{
+        printf("********ELIMINACION DE DISCO FALLIDA********\n\n");
+    }
 }
 
 int crear_directorios(char *path){

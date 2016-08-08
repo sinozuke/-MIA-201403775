@@ -21,7 +21,7 @@ int main()
                         mkdisk(token);
                         break;
                     case 2:
-                        printf("Comando Rmdisk invocado\n");
+                        rmdisk(token);
                         break;
                     case 3:
                         printf("Comando fdisk invocado\n");

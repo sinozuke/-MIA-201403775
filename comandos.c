@@ -21,8 +21,8 @@ void mkdisk(char *token)
     int valor_size;
     int p_size=0,p_unit=0,p_path=0,p_name=0;
     int kilo_mega=1;
-    token = strtok(NULL, " ");
     int i;
+    token = strtok(NULL, " ");
     while (token)
     {
         switch(parametros_mkdisk(token)){
@@ -140,7 +140,51 @@ void mkdisk(char *token)
 
 void rmdisk(char *token)
 {
-
+    char valor[500];
+    char *valor_r;
+    char *path;
+    int p_path=0;
+    token = strtok(NULL, " ");
+    int i;
+    while (token)
+    {
+        switch(parametros_mkdisk(token)){
+            case 3:
+                if(!p_path){
+                    if(!pasa(token,1,0)){
+                        printf("ERROR: no se presenta el separador '::' entre el parametro 'path' y el valor.\n");
+                        return;
+                    }
+                    if(!pasa(token,0,1)){
+                        printf("ERROR: el valor del parametro 'path' no esta encerrado entre comillas.\n");
+                        return;
+                    }
+                    for(i=0;token[i+7]!='\0';i++)
+                        valor[i]=token[i+7];
+                    valor[i]='\0';
+                    valor_r = valor_real(longitud_real(valor),valor);
+                    valor_r = ncomillas(valor_r);
+                    path = malloc(sizeof(char)*strlen(valor_r));
+                    strcpy(path,valor_r);
+                }else{
+                    printf("ERROR: Parametro 'path' declarado mas de una vez.\n");
+                    return;
+                }
+                p_path = 1;
+                break;
+            default:
+                printf("Error: el parametro \"%s\" no es reconocido\n",token);
+                return;
+        }
+        token = strtok(NULL, " ");
+    }
+    if(p_path){
+        printf("---------------BORRANDO DISCO---------------\n");
+        eliminar_disco(path);
+    }else{
+            printf("el parametro 'path' no se ha encontrado\n");
+        return;
+    }
 }
 
 void fdisk(char *token)
