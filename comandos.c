@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "comandos.h"
@@ -34,7 +35,7 @@ void mkdisk(char *token)
                     for(i=0;token[i+7]!='\0';i++)
                         valor[i]=token[i+7];
                     valor[i]='\0';
-                    valor_r = valor_real(longitud_real(&valor),valor);
+                    valor_r = valor_real(longitud_real(valor),valor);
                     sscanf(valor_r,"%d",&valor_size);
                     if(valor_size<=0){
                         printf("ERROR: el valor \"%s\" para el aprametro size no es aceptado.\n",valor_r);
@@ -55,7 +56,7 @@ void mkdisk(char *token)
                     for(i=0;token[i+7]!='\0';i++)
                         valor[i]=token[i+7];
                     valor[i]='\0';
-                    valor_r = valor_real(longitud_real(&valor),valor);
+                    valor_r = valor_real(longitud_real(valor),valor);
                     kilo_mega = k_m(valor_r);
                     if(kilo_mega==0){
                         printf("el valor \"%s\" para el parametro unit no es aceptado.\n",valor_r);
@@ -80,7 +81,7 @@ void mkdisk(char *token)
                     for(i=0;token[i+7]!='\0';i++)
                         valor[i]=token[i+7];
                     valor[i]='\0';
-                    valor_r = valor_real(longitud_real(&valor),valor);
+                    valor_r = valor_real(longitud_real(valor),valor);
                     valor_r = ncomillas(valor_r);
                     path = malloc(sizeof(char)*strlen(valor_r));
                     strcpy(path,valor_r);
@@ -99,7 +100,7 @@ void mkdisk(char *token)
                     for(i=0;token[i+7]!='\0';i++)
                         valor[i]=token[i+7];
                     valor[i]='\0';
-                    valor_r = valor_real(longitud_real(&valor),valor);
+                    valor_r = valor_real(longitud_real(valor),valor);
                     nombre = malloc(sizeof(char)*strlen(valor_r));
                     strcpy(nombre,valor_r);
                 }else{
@@ -122,7 +123,10 @@ void mkdisk(char *token)
         else
             printf("Tamaño:\t%i\nMedida:\t%s\nPath:\t%s\nNombre:\t%s\n",valor_size,"Kb",path,nombre);
         printf("-----------------GENERANDO-----------------\n");
-        generar_disco(nombre,path,valor_size,kilo_mega);
+        if(kilo_mega==1)
+            generar_disco(nombre,path,valor_size,'m');
+        else
+            generar_disco(nombre,path,valor_size,'k');
     }else{
         if(!p_size)
             printf("el parametro 'size' no se ha encontrado\n");
@@ -261,5 +265,7 @@ int opcion(char *token){
         return 6;
     if(strcmp(token, "exec")==0)
         return 7;
-            return 0;
+    if(strcmp(token, "exit")==0)
+        return 8;
+    return 0;
 }

@@ -13,15 +13,17 @@
 
 1470097274 source:/home/son/Proyectos/Manejo e Implementacion de Archivos/Proyecto_Unico/comandos.h
 
-1470610181 source:/home/son/git-repos/-MIA-201403775/main.c
+1470621832 source:/home/son/git-repos/-MIA-201403775/main.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
+	<ctype.h>
 	"comandos.h"
 
 1470534638 /home/son/git-repos/-MIA-201403775/comandos.h
 
-1470613596 source:/home/son/git-repos/-MIA-201403775/comandos.c
+1470621269 source:/home/son/git-repos/-MIA-201403775/comandos.c
+	<stdio.h>
 	<stdlib.h>
 	<string.h>
 	"comandos.h"
@@ -34,12 +36,16 @@
 
 1470340350 source:/home/son/git-repos/-MIA-201403775/func_generacion.h
 
-1470615308 source:/home/son/git-repos/-MIA-201403775/funciones.c
+1470621626 source:/home/son/git-repos/-MIA-201403775/funciones.c
 	<stdio.h>
+	<string.h>
+	<sys/types.h>
+	<sys/stat.h>
+	<unistd.h>
 	"Datos.h"
 	"funciones.h"
 
-1470534519 /home/son/git-repos/-MIA-201403775/funciones.h
+1470620685 /home/son/git-repos/-MIA-201403775/funciones.h
 
 1470516833 source:/home/son/git-repos/-MIA-201403775/funciones.h
 

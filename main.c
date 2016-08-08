@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "comandos.h"
 #define MAXLON 200
 
@@ -37,6 +38,9 @@ int main()
                     case 7:
                         printf("Comando Exec invocado\n");
                         break;
+                    case 8:
+                        printf("----------Saliendo del sistema----------\n");
+                        return 0;
                     default:
                         printf("ERROR: el comando \"%s\" no reconocido\n",token);
                         break;
