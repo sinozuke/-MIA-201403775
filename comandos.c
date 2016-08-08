@@ -124,9 +124,9 @@ void mkdisk(char *token)
             printf("Tamaño:\t%i\nMedida:\t%s\nPath:\t%s\nNombre:\t%s\n",valor_size,"Kb",path,nombre);
         printf("-----------------GENERANDO-----------------\n");
         if(kilo_mega==1)
-            generar_disco(nombre,path,valor_size,'m');
+            generar_disco(nombre,path,valor_size,1);
         else
-            generar_disco(nombre,path,valor_size,'k');
+            generar_disco(nombre,path,valor_size,0);
     }else{
         if(!p_size)
             printf("el parametro 'size' no se ha encontrado\n");
@@ -136,6 +136,9 @@ void mkdisk(char *token)
             printf("el parametro 'path' no se ha encontrado\n");
         return;
     }
+    free(valor_r);
+    free(path);
+    free(nombre);
 }
 
 void rmdisk(char *token)

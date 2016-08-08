@@ -8,7 +8,7 @@
 
 int crear_directorios(char *path);
 
-void generar_disco(char *nombre,char *path, int tamano, char tipo){
+void generar_disco(char *nombre,char *path, int tamano, int tipo){
 /*    MBR mbr1;
     mbr1.mbr_fecha_creacion = time(NULL);
     printf("hecho!\n%");
@@ -40,9 +40,9 @@ void generar_disco(char *nombre,char *path, int tamano, char tipo){
         return;
     }
 
-    printf("%c\n",tipo);
+    printf("%i\n",tipo);
 
-    if(tipo=='m')
+    if(tipo==1)
         for(int j=0;j<tamano;j++)
             for(int i=0;i<1024;i++)
                 fwrite(KiloByte,sizeof(char),1024,disco);
