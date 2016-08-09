@@ -309,7 +309,23 @@ void fdisk(char *token)
                 break;
             case 5:
                 if(!p_type){
-                    //correccion para el tipo type :P u.u
+                    if(!pasa(token,1,0)){
+                        printf("ERROR: no se presenta el separador '::' entre el parametro 'type' y el valor.\n");
+                        return;
+                    }
+                    for(i=0;token[i+7]!='\0';i++)
+                        valor[i]=token[i+7];
+                    valor[i]='\0';
+                    valor_r = valor_real(longitud_real(valor),valor);
+                    if(strlen(valor_r)!=1){
+                        printf("ERROR: valor \"%s\" no permitido para el parametro 'type'.\n",valor_r);
+                        return;
+                    }
+                    type=valor_r[0];
+                    if(!(type=='p' || type=='e' || type=='l')){
+                        printf("ERROR: valor \"%s\" no permitido para el parametro 'type'.\n",valor_r);
+                        return;
+                    }
                 }else{
                     printf("ERROR: el parametro 'type' esta declarado mas de una vez.\n");
                     return;
@@ -327,11 +343,11 @@ void fdisk(char *token)
                     valor[i]='\0';
                     valor_r = valor_real(longitud_real(valor),valor);
                     if(strlen(valor_r)!=2){
-                        printf("ERROR: valor \"%s\" no permitido para el parametro 'type'.\n",valor_r);
+                        printf("ERROR: valor \"%s\" no permitido para el parametro 'fit'.\n",valor_r);
                         return;
                     }
                     if((fit=BF_FF_WF(valor_r))=='n'){
-                        printf("ERROR: valor \"%s\" no permitido para el parametro 'type'.\n",valor_r);
+                        printf("ERROR: valor \"%s\" no permitido para el parametro 'fit'.\n",valor_r);
                         return;
                     }
                 }else{
