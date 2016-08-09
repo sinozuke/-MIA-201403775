@@ -123,6 +123,27 @@ void eliminar_disco(char *path){
     }
 }
 
+
+void crear_pp(char *nombre, char *path, int tamano, char fit,int unit){
+    printf("hecho\n");
+}
+
+void crear_pl(char *nombre, char *path, int tamano, char fit,int unit){
+    printf("hecho\n");
+}
+
+void crear_pe(char *nombre, char *path, int tamano, char fit,int unit){
+    printf("hecho\n");
+}
+
+void eliminar_particion(char *name,char *path){
+    printf("hecho\n");
+}
+
+void modificar_tamano_particion(char *name, char*path,char unit){
+    printf("hecho\n");
+}
+
 int crear_directorios(char *path){
 
     char *direc = strtok(path,"/");

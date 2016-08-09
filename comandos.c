@@ -12,6 +12,8 @@ char *ncomillas(char *a);
 int k_m(char *valor);
 int pasa(char *token,int opcino1,int opcion2);
 char BF_FF_WF(char *valor);
+char Fast_Full(char *valor);
+int isnumero(char *token);
 
 void mkdisk(char *token)
 {
@@ -37,6 +39,10 @@ void mkdisk(char *token)
                         valor[i]=token[i+7];
                     valor[i]='\0';
                     valor_r = valor_real(longitud_real(valor),valor);
+                    if(!isnumero(valor_r)){
+                        printf("ERROR el Valor ingresado para size no es un numero.\n");
+                        return;
+                    }
                     sscanf(valor_r,"%d",&valor_size);
                     if(valor_size<=0){
                         printf("ERROR: el valor \"%s\" para el aprametro size no es aceptado.\n",valor_r);
@@ -199,15 +205,14 @@ void fdisk(char *token)
     int p_delete=0;
     int p_add=0;
 
-    int add_delete=0;
+    int add=0;
     int size;
     int unit = 2;
     char *path;
     char *name;
     char type = 'p';
     char fit = 'w';
-    int vdelete;
-    int add;
+    char vdelete;
 
     char valor[500];
     char *valor_r;
@@ -227,13 +232,16 @@ void fdisk(char *token)
                         valor[i]=token[i+7];
                     valor[i]='\0';
                     valor_r = valor_real(longitud_real(valor),valor);
+                    if(!isnumero(valor_r)){
+                        printf("ERROR el Valor ingresado para size no es un numero.\n");
+                        return;
+                    }
                     sscanf(valor_r,"%d",&size);
                     if(size<=0){
                         printf("ERROR: el valor \"%s\" para el aprametro size no es aceptado.\n",valor_r);
                         return;
                     }
                     p_size = 1;
-                    printf("%i\n",size);
                 }else{
                     printf("ERROR: el parametro 'size' esta declarado mas de una vez.\n");
                     return;
@@ -304,7 +312,6 @@ void fdisk(char *token)
                     printf("ERROR: el parametro 'name' esta declarado mas de una vez.\n");
                     return;
                 }
-                printf("%s\n",name);
                 p_name =1;
                 break;
             case 5:
@@ -362,11 +369,25 @@ void fdisk(char *token)
                         printf("ERROR: declaracion previa de parametro incopatible 'add'.\n");
                         return;
                     }
-                    printf("Parametro 'delete' reconocido.\n");
+                    if(!pasa(token,1,0)){
+                        printf("ERROR: no se presenta el separador '::' entre el parametro 'delete' y el valor.\n");
+                        return;
+                    }
+                    for(i=0;token[i+9]!='\0';i++)
+                        valor[i]=token[i+9];
+                    valor[i]='\0';
+                    valor_r = valor_real(longitud_real(valor),valor);
+                    vdelete = Fast_Full(valor_r);
+
+                    if(vdelete=='n'){
+                        printf("ERROr el valor \"%s\" para el parametro 'delete' no es valido.\n",valor_r);
+                        return;
+                    }
                 }else{
                     printf("ERROR: el parametro 'delete' esta declarado mas de una vez.\n");
                     return;
                 }
+                p_delete=1;
                 break;
             case 8:
                 if(!p_add){
@@ -374,11 +395,28 @@ void fdisk(char *token)
                         printf("ERROR: declaracion previa de parametro incopatible 'delete'.\n");
                         return;
                     }
-                    printf("Parametro 'add' reconocido.\n");
+                    if(!pasa(token,1,0)){
+                        printf("ERROR: no se presenta el separador '::' entre el parametro 'delete' y el valor.\n");
+                        return;
+                    }
+                    for(i=0;token[i+6]!='\0';i++)
+                        valor[i]=token[i+6];
+                    valor[i]='\0';
+                    valor_r = valor_real(longitud_real(valor),valor);
+                    if(!isnumero(valor_r)){
+                        printf("ERROR el Valor ingresado para size no es un numero.\n");
+                        return;
+                    }
+                    add = atoi(valor_r);
+                    if(add==0){
+                        printf("ERROr el valor \"%i\" para el parametro 'add' no es valido.\n",add);
+                        return;
+                    }
                 }else{
                     printf("ERROR: el parametro 'add' esta declarado mas de una vez.\n");
                     return;
                 }
+                p_add=1;
                 break;
             default:
                 printf("Parametro \"%s\" NO reconocido.\n",token);
@@ -386,6 +424,98 @@ void fdisk(char *token)
         }
         token = strtok(NULL, " ");
     }
+    if(p_delete){
+        if(p_name*p_path){
+            if(p_fit)
+                printf("ADVERTENCIA: El parametro 'fit' sera ignorado dado que no es nesesario para su eliminacion.\n");
+            if(p_type)
+                printf("ADVERTENCIA: El parametro 'type' sera ignorado dado que no es nesesario para su eliminacion.\n");
+            if(p_unit)
+                printf("ADVERTENCIA: El parametro 'unit' sera ignorado dado que no es nesesario para su eliminacion.\n");
+            if(p_size)
+                printf("ADVERTENCIA: El parametro 'size' sera ignorado dado que no es nesesario para su eliminacion.\n");
+            eliminar_particion(name,path);
+        }else{
+            if(!p_name)
+                printf("ERROR: para eliminar una particion es nesario el nombre de la misma.\n");
+            if(!p_path)
+                printf("ERROR: para eliminar una particion es nesario el path en donde se encuentra el disco.\n");
+            return;
+        }
+    }else if(p_add){
+        if(p_unit*p_name*p_path){
+            if(p_size)
+                printf("ADVERTENCIA: El parametro 'size' sera ignorado dado que no es nesesario para su eliminacion.\n");
+            if(p_type)
+                printf("ADVERTENCIA: El parametro 'type' sera ignorado dado que no es nesesario para su eliminacion.\n");
+            if(p_fit)
+                printf("ADVERTENCIA: El parametro 'fit' sera ignorado dado que no es nesesario para su eliminacion.\n");
+            switch(unit){
+                case 1:
+                    modificar_tamano_particion(name,path,'m');
+                    break;
+                case 2:
+                    modificar_tamano_particion(name,path,'k');
+                    break;
+                case 3:
+                    modificar_tamano_particion(name,path,'b');
+                    break;
+            }
+        }else{
+            if(!p_name)
+                printf("ERROR: para modificar el tamano en una particion es nesario el nombre de la misma.\n");
+            if(!p_path)
+                printf("ERROR: para modificar el tamano en una particion es nesario el path del disco en donde esta la misma.\n");
+            if(!p_unit)
+                printf("ERROR: para modificar el tamano en una particion es nesario especificar en que medida se aumentara/disminuira la misma.\n");
+            return;
+        }
+    }else{
+        if(p_name*p_path*p_size){
+            if(type=='p')
+                crear_pp(name,path,size,fit,unit);
+            if(type=='e')
+                crear_pe(name,path,size,fit,unit);
+            if(type=='l')
+                crear_pl(name,path,size,fit,unit);
+        }else{
+            if(!p_name)
+                printf("ERROR: para crear una particion se nesesita de un nombre.\n");
+            if(!p_size)
+                printf("ERROR: para crear una particion se nesesita de un tamano.\n");
+            if(!p_path)
+                printf("ERROR: para crear una particion se nesesita del directorio en donde esta el disco que la alojara.\n");
+            return;
+        }
+    }
+
+
+}
+
+
+int isnumero(char *token){
+
+    for(int i=0;token[i]!='\0';i++){
+        if(isalpha(token[i])){
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+char Fast_Full(char *valor){
+    if(strlen(valor)==4){
+        char *pos = strstr(valor,"fast");
+        if(pos){
+            return 'a';
+        }
+        pos = strstr(valor,"full");
+        if(pos){
+            return 'u';
+        }
+    }
+    return 'n';
 
 }
 
@@ -410,33 +540,37 @@ void exec(char *token){
 }
 
 char BF_FF_WF(char *valor){
-    char *pos = strstr(valor,"bf");
-    if(pos){
-        return 'b';
-    }
-    pos = strstr(valor,"ff");
-    if(pos){
-        return 'f';
-    }
-    pos = strstr(valor,"wf");
-    if(pos){
-        return 'w';
+    if(strlen(valor)==2){
+        char *pos = strstr(valor,"bf");
+        if(pos){
+            return 'b';
+        }
+        pos = strstr(valor,"ff");
+        if(pos){
+            return 'f';
+        }
+        pos = strstr(valor,"wf");
+        if(pos){
+            return 'w';
+        }
     }
     return 'n';
 }
 
 int k_m(char *valor){
-    char *pos = strstr(valor,"m");
-    if(pos){
-        return 1;
-    }
-    pos = strstr(valor,"k");
-    if(pos){
-        return 2;
-    }
-    pos = strstr(valor,"b");
-    if(pos){
-        return 3;
+    if(strlen(valor)==1){
+        char *pos = strstr(valor,"m");
+        if(pos){
+            return 1;
+        }
+        pos = strstr(valor,"k");
+        if(pos){
+            return 2;
+        }
+        pos = strstr(valor,"b");
+        if(pos){
+            return 3;
+        }
     }
     return 0;
 }
