@@ -322,8 +322,8 @@ void fdisk(char *token)
                         printf("ERROR: no se presenta el separador '::' entre el parametro 'type' y el valor.\n");
                         return;
                     }
-                    for(i=0;token[i+7]!='\0';i++)
-                        valor[i]=token[i+7];
+                    for(i=0;token[i+6]!='\0';i++)
+                        valor[i]=token[i+6];
                     valor[i]='\0';
                     valor_r = valor_real(longitud_real(valor),valor);
                     if(strlen(valor_r)!=2){
