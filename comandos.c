@@ -11,6 +11,7 @@ char *valor_real(int a, char *b);
 char *ncomillas(char *a);
 int k_m(char *valor);
 int pasa(char *token,int opcino1,int opcion2);
+char BF_FF_WF(char *valor);
 
 void mkdisk(char *token)
 {
@@ -58,7 +59,7 @@ void mkdisk(char *token)
                     valor[i]='\0';
                     valor_r = valor_real(longitud_real(valor),valor);
                     kilo_mega = k_m(valor_r);
-                    if(kilo_mega==0){
+                    if(kilo_mega==0 || kilo_mega==3){
                         printf("el valor \"%s\" para el parametro unit no es aceptado.\n",valor_r);
                         return;
                     }
@@ -308,11 +309,27 @@ void fdisk(char *token)
                 break;
             case 5:
                 if(!p_type){
-                    printf("Parametro 'type' reconocido.\n");
+                    if(!pasa(token,1,0)){
+                        printf("ERROR: no se presenta el separador '::' entre el parametro 'type' y el valor.\n");
+                        return;
+                    }
+                    for(i=0;token[i+7]!='\0';i++)
+                        valor[i]=token[i+7];
+                    valor[i]='\0';
+                    valor_r = valor_real(longitud_real(valor),valor);
+                    if(strlen(valor_r)!=2){
+                        printf("ERROR: valor \"%s\" no permitido para el parametro 'type'.\n",valor_r);
+                        return;
+                    }
+                    if((type=BF_FF_WF(valor_r))=='n'){
+                        printf("ERROR: valor \"%s\" no permitido para el parametro 'type'.\n",valor_r);
+                        return;
+                    }
                 }else{
                     printf("ERROR: el parametro 'type' esta declarado mas de una vez.\n");
                     return;
                 }
+                p_type=1;
                 break;
             case 6:
                 if(!p_fit){
@@ -373,6 +390,22 @@ void rep(char *token){
 
 void exec(char *token){
 
+}
+
+char BF_FF_WF(char *valor){
+    char *pos = strstr(valor,"bf");
+    if(pos){
+        return 'b';
+    }
+    pos = strstr(valor,"ff");
+    if(pos){
+        return 'f';
+    }
+    pos = strstr(valor,"wf");
+    if(pos){
+        return 'w';
+    }
+    return 'n';
 }
 
 int k_m(char *valor){
