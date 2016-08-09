@@ -309,6 +309,15 @@ void fdisk(char *token)
                 break;
             case 5:
                 if(!p_type){
+                    //correccion para el tipo type :P u.u
+                }else{
+                    printf("ERROR: el parametro 'type' esta declarado mas de una vez.\n");
+                    return;
+                }
+                p_type=1;
+                break;
+            case 6:
+                if(!p_fit){
                     if(!pasa(token,1,0)){
                         printf("ERROR: no se presenta el separador '::' entre el parametro 'type' y el valor.\n");
                         return;
@@ -321,23 +330,15 @@ void fdisk(char *token)
                         printf("ERROR: valor \"%s\" no permitido para el parametro 'type'.\n",valor_r);
                         return;
                     }
-                    if((type=BF_FF_WF(valor_r))=='n'){
+                    if((fit=BF_FF_WF(valor_r))=='n'){
                         printf("ERROR: valor \"%s\" no permitido para el parametro 'type'.\n",valor_r);
                         return;
                     }
                 }else{
-                    printf("ERROR: el parametro 'type' esta declarado mas de una vez.\n");
-                    return;
-                }
-                p_type=1;
-                break;
-            case 6:
-                if(!p_fit){
-                    printf("Parametro 'fit' reconocido.\n");
-                }else{
                     printf("ERROR: el parametro 'fit' esta declarado mas de una vez.\n");
                     return;
                 }
+                p_fit = 1;
                 break;
             case 7:
                 if(!p_delete){
