@@ -289,11 +289,22 @@ void fdisk(char *token)
                 break;
             case 4:
                 if(!p_name){
-                    printf("Parametro 'name' reconocido.\n");
+                    if(!pasa(token,1,0)){
+                        printf("ERROR: no se presenta el separador '::' entre el parametro 'name' y el valor.\n");
+                        return;
+                    }
+                    for(i=0;token[i+7]!='\0';i++)
+                        valor[i]=token[i+7];
+                    valor[i]='\0';
+                    valor_r = valor_real(longitud_real(valor),valor);
+                    name = malloc(sizeof(char)*strlen(valor_r));
+                    strcpy(name,valor_r);
                 }else{
                     printf("ERROR: el parametro 'name' esta declarado mas de una vez.\n");
                     return;
                 }
+                printf("%s\n",name);
+                p_name =1;
                 break;
             case 5:
                 if(!p_type){
