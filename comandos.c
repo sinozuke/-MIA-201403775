@@ -266,11 +266,26 @@ void fdisk(char *token)
                 break;
             case 3:
                 if(!p_path){
-                    printf("Parametro 'path' reconocido.\n");
+                    if(!pasa(token,1,0)){
+                        printf("ERROR: no se presenta el separador '::' entre el parametro 'path' y el valor.\n");
+                        return;
+                    }
+                    if(!pasa(token,0,1)){
+                        printf("ERROR: el valor del parametro 'path' no esta encerrado entre comillas.\n");
+                        return;
+                    }
+                    for(i=0;token[i+7]!='\0';i++)
+                        valor[i]=token[i+7];
+                    valor[i]='\0';
+                    valor_r = valor_real(longitud_real(valor),valor);
+                    valor_r = ncomillas(valor_r);
+                    path = malloc(sizeof(char)*strlen(valor_r));
+                    strcpy(path,valor_r);
                 }else{
                     printf("ERROR: el parametro 'path' esta declarado mas de una vez.\n");
                     return;
                 }
+                p_path=1;
                 break;
             case 4:
                 if(!p_name){
