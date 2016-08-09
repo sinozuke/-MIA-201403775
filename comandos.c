@@ -189,38 +189,122 @@ void rmdisk(char *token){
 
 void fdisk(char *token)
 {
+    int p_size=0;
+    int p_unit=0;
+    int p_path=0;
+    int p_name=0;
+    int p_type=0;
+    int p_fit=0;
+    int p_delete=0;
+    int p_add=0;
+
+    int add_delete=0;
+    int size;
+    char unit ='k';
+    char *path;
+    char *name;
+    char type = 'p';
+    char fit = 'w';
+    int vdelete;
+    int add;
+
+    char valor[500];
+    char *valor_r;
+    int i;
+
     token = strtok(NULL, " ");
     while (token)
     {
-        printf("%s\n",token);
         switch(parametros(token)){
             case 1:
-                printf("Parametro 'size' reconocido.\n");
+                if(!p_size){
+                    if(!pasa(token,1,0)){
+                        printf("ERROR: no se presenta el separador '::' entre el parametro 'size' y el valor.\n");
+                        return;
+                    }
+                    for(i=0;token[i+7]!='\0';i++)
+                        valor[i]=token[i+7];
+                    valor[i]='\0';
+                    valor_r = valor_real(longitud_real(valor),valor);
+                    sscanf(valor_r,"%d",&size);
+                    if(size<=0){
+                        printf("ERROR: el valor \"%s\" para el aprametro size no es aceptado.\n",valor_r);
+                        return;
+                    }
+                    p_size = 1;
+                    printf("%i\n",size);
+                }else{
+                    printf("ERROR: el parametro 'size' esta declarado mas de una vez.\n");
+                    return;
+                }
                 break;
             case 2:
-                printf("Parametro 'unit' reconocido.\n");
+                if(!p_unit){
+                    printf("Parametro 'unit' reconocido.\n");
+                }else{
+                    printf("ERROR: el parametro 'unit' esta declarado mas de una vez.\n");
+                    return;
+                }
                 break;
             case 3:
-                printf("Parametro 'path' reconocido.\n");
+                if(!p_path){
+                    printf("Parametro 'path' reconocido.\n");
+                }else{
+                    printf("ERROR: el parametro 'path' esta declarado mas de una vez.\n");
+                    return;
+                }
                 break;
             case 4:
-                printf("Parametro 'name' reconocido.\n");
+                if(!p_name){
+                    printf("Parametro 'name' reconocido.\n");
+                }else{
+                    printf("ERROR: el parametro 'name' esta declarado mas de una vez.\n");
+                    return;
+                }
                 break;
             case 5:
-                printf("Parametro 'type' reconocido.\n");
+                if(!p_type){
+                    printf("Parametro 'type' reconocido.\n");
+                }else{
+                    printf("ERROR: el parametro 'type' esta declarado mas de una vez.\n");
+                    return;
+                }
                 break;
             case 6:
-                printf("Parametro 'fit' reconocido.\n");
+                if(!p_fit){
+                    printf("Parametro 'fit' reconocido.\n");
+                }else{
+                    printf("ERROR: el parametro 'fit' esta declarado mas de una vez.\n");
+                    return;
+                }
                 break;
             case 7:
-                printf("Parametro 'delete' reconocido.\n");
+                if(!p_delete){
+                    if(p_add){
+                        printf("ERROR: declaracion previa de parametro incopatible 'add'.\n");
+                        return;
+                    }
+                    printf("Parametro 'delete' reconocido.\n");
+                }else{
+                    printf("ERROR: el parametro 'delete' esta declarado mas de una vez.\n");
+                    return;
+                }
                 break;
             case 8:
-                printf("Parametro 'add' reconocido.\n");
+                if(!p_add){
+                    if(p_delete){
+                        printf("ERROR: declaracion previa de parametro incopatible 'delete'.\n");
+                        return;
+                    }
+                    printf("Parametro 'add' reconocido.\n");
+                }else{
+                    printf("ERROR: el parametro 'add' esta declarado mas de una vez.\n");
+                    return;
+                }
                 break;
             default:
-                printf("Parametro NO reconocido.\n");
-                break;
+                printf("Parametro \"%s\" NO reconocido.\n",token);
+                return;
         }
         token = strtok(NULL, " ");
     }

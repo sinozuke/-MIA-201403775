@@ -20,6 +20,20 @@ void generar_disco(char *nombre,char *path, int tamano, int tipo){
         return;
     }
 
+    if(tipo==1){
+            if(tamano<10){
+            printf("ERROR: le valor minimo para un nuevo Disco es de 10 Mb.\n");
+            printf("************GENERACION FALLIDA************\n\n");
+            return;
+        }
+    }else{
+        if(tamano<10240){
+            printf("ERROR: el valor minimo para un nuevo Disco Duro es de 10240Kb.\n");
+            printf("************GENERACION FALLIDA************\n\n");
+            return;
+        }
+    }
+
     char KiloByte[1024];
 
     for(int i=0;i<1024;i++)

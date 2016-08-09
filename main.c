@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "comandos.h"
+//#include "Datos.h"
 #define MAXLON 200
 
 char* token;
@@ -49,4 +50,9 @@ int main()
                     token = strtok(NULL, " ");
         }
     }
+
+/*    printf("%i\n",sizeof(MBR));
+    printf("%i\n",sizeof(particion));
+    printf("%i\n",sizeof(EBR));
+*/
 }

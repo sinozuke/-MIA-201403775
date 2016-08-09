@@ -7,6 +7,8 @@ void eliminar_disco(char *path);
 void crear_pp();
 void crear_pl();
 void crear_pe();
+void eliminar_particion();
+void modificar_tamano_particion();
 void mount_c(char *path,char *name);
 void umount_c();
 
