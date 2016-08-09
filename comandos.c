@@ -200,7 +200,7 @@ void fdisk(char *token)
 
     int add_delete=0;
     int size;
-    char unit ='k';
+    int unit = 2;
     char *path;
     char *name;
     char type = 'p';
@@ -240,7 +240,25 @@ void fdisk(char *token)
                 break;
             case 2:
                 if(!p_unit){
-                    printf("Parametro 'unit' reconocido.\n");
+                    if(!p_unit){
+                        if(!pasa(token,1,0)){
+                            printf("ERROR: no se presenta el separador '::' entre el parametro 'unit' y el valor.\n");
+                            return;
+                        }
+                        for(i=0;token[i+7]!='\0';i++)
+                            valor[i]=token[i+7];
+                        valor[i]='\0';
+                        valor_r = valor_real(longitud_real(valor),valor);
+                        unit = k_m(valor_r);
+                        if(unit==0){
+                            printf("el valor \"%s\" para el parametro unit no es aceptado.\n",valor_r);
+                            return;
+                        }
+                    }else{
+                        printf("ERROR: Parametro 'unit' declarado mas de una vez.\n");
+                        return;
+                    }
+                    p_unit = 1;
                 }else{
                     printf("ERROR: el parametro 'unit' esta declarado mas de una vez.\n");
                     return;
@@ -339,6 +357,10 @@ int k_m(char *valor){
     pos = strstr(valor,"k");
     if(pos){
         return 2;
+    }
+    pos = strstr(valor,"b");
+    if(pos){
+        return 3;
     }
     return 0;
 }
