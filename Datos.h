@@ -9,7 +9,7 @@ typedef struct Partition{
     char part_fit;
     int part_start;
     int part_size;
-    int part_name;
+    char part_name[16];
 } particion;
 
 typedef struct Master_Boot_Record{

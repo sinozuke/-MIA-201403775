@@ -123,8 +123,6 @@ void mkdisk(char *token)
         token = strtok(NULL, " ");
     }
     if(p_size*p_path*p_name){
-        printf("-------------CREANDO PARTICION-------------\n");
-        printf("-------------------DATOS-------------------\n");
         if(kilo_mega==1)
             printf("Tamaño:\t%i\nMedida:\t%s\nPath:\t%s\nNombre:\t%s\n",valor_size,"Mb",path,nombre);
         else
@@ -434,7 +432,7 @@ void fdisk(char *token)
                 printf("ADVERTENCIA: El parametro 'unit' sera ignorado dado que no es nesesario para su eliminacion.\n");
             if(p_size)
                 printf("ADVERTENCIA: El parametro 'size' sera ignorado dado que no es nesesario para su eliminacion.\n");
-            eliminar_particion(name,path);
+            eliminar_particion(name,path,vdelete);
         }else{
             if(!p_name)
                 printf("ERROR: para eliminar una particion es nesario el nombre de la misma.\n");
@@ -452,13 +450,13 @@ void fdisk(char *token)
                 printf("ADVERTENCIA: El parametro 'fit' sera ignorado dado que no es nesesario para su eliminacion.\n");
             switch(unit){
                 case 1:
-                    modificar_tamano_particion(name,path,'m');
+                    modificar_tamano_particion(name,path,'m',add);
                     break;
                 case 2:
-                    modificar_tamano_particion(name,path,'k');
+                    modificar_tamano_particion(name,path,'k',add);
                     break;
                 case 3:
-                    modificar_tamano_particion(name,path,'b');
+                    modificar_tamano_particion(name,path,'b',add);
                     break;
             }
         }else{
