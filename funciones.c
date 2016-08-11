@@ -10,6 +10,7 @@
 
 int crear_directorios(char *path);
 int lugar(MBR mbr,int tamano);
+int name_exist(FILE *disco,MBR mbr,char *name);
 
 void generar_disco(char *nombre,char *path, int tamano, int tipo){
 
@@ -154,6 +155,9 @@ void crear_pp(char *nombre, char *path, int tamano, char fit,int unit){
             break;
     }
 
+    printf("-------------------DATOS-------------------\n");
+    printf("Nombre: %s\nPath: %s\n tamano: %i\nFit: %c\nUnit: %i\n",nombre,path,tamano_real,fit,unit);
+
 
     int posicion = lugar(leido,tamano_real);
 
@@ -166,6 +170,13 @@ void crear_pp(char *nombre, char *path, int tamano, char fit,int unit){
 
     if(posicion==-1){
         printf("ERROR: ya no es posible crear particion devido a que ya no espacio disponible.\n");
+        printf("-------------CREACION FALLIDA--------------\n\n");
+        fclose(disco);
+        return;
+    }
+
+    if(name_exist(disco,leido,nombre)){
+        printf("ERROR: el nombre ya existen entre las particiones.\n");
         printf("-------------CREACION FALLIDA--------------\n\n");
         fclose(disco);
         return;
@@ -210,7 +221,7 @@ void crear_pp(char *nombre, char *path, int tamano, char fit,int unit){
     printf("-------------CREACION EXITOSA--------------\n");
 
     fclose(disco);
-
+/*
     disco = fopen(path,"r+b");
 
     if(!disco){
@@ -231,7 +242,7 @@ void crear_pp(char *nombre, char *path, int tamano, char fit,int unit){
     printf("Particion 3:\n\tNombre:%s\n\tInicio: %i\n\tTamano: %i\n",master.mbr_partition_3.part_name,master.mbr_partition_3.part_start,master.mbr_partition_3.part_size);
     printf("Particion 4:\n\tNombre:%s\n\tInicio: %i\n\tTamano: %i\n",master.mbr_partition_4.part_name,master.mbr_partition_4.part_start,master.mbr_partition_4.part_size);
 
-    fclose(disco);
+    fclose(disco);*/
 }
 
 void crear_pl(char *nombre, char *path, int tamano, char fit,int unit){
