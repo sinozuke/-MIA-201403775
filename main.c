@@ -3,7 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "comandos.h"
-//#include "Datos.h"
+#include "Datos.h"
 #define MAXLON 200
 
 char* token;
@@ -11,7 +11,7 @@ char cadena[MAXLON+1];
 
 int main()
 {
-    while(1){
+ /*   while(1){
         gets(cadena);
         for(int i = 0; cadena[i]; i++)
             cadena[i] = tolower(cadena[i]); //<--convierte a minusculas
@@ -51,8 +51,8 @@ int main()
         }
     }
 
-/*    printf("%i\n",sizeof(MBR));
-    printf("%i\n",sizeof(particion));
-    printf("%i\n",sizeof(EBR));
-*/
+*/    printf("%i\n",(int)sizeof(MBR));
+    printf("%i\n",(int)sizeof(particion));
+    printf("%i\n",(int)sizeof(EBR));
+
 }

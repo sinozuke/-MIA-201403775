@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "comandos.h"
 #include "funciones.h"
 
@@ -123,6 +124,8 @@ void mkdisk(char *token)
         token = strtok(NULL, " ");
     }
     if(p_size*p_path*p_name){
+        printf("-------------CREANDO DISCO-------------\n");
+        printf("-----------------DATOS-----------------\n");
         if(kilo_mega==1)
             printf("Tamaño:\t%i\nMedida:\t%s\nPath:\t%s\nNombre:\t%s\n",valor_size,"Mb",path,nombre);
         else

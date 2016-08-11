@@ -9,14 +9,12 @@
 #include "funciones.h"
 
 int crear_directorios(char *path);
+int lugar(MBR mbr,int tamano);
 
 void generar_disco(char *nombre,char *path, int tamano, int tipo){
 
     char directorio[strlen(path)];
     strcpy(directorio,path);
-
-    printf("-------------CREANDO DISCO-------------\n");
-    printf("-----------------DATOS-----------------\n");
 
     if(crear_directorios(path)==0){
         printf("ERROR: el valor ingresado para path es erroneo.\n");
@@ -76,7 +74,7 @@ void generar_disco(char *nombre,char *path, int tamano, int tipo){
 
     particion particion_vacia;
 
-    particion_vacia.part_status = '-';
+    particion_vacia.part_status = 'n';
     particion_vacia.part_type = 'n';
     particion_vacia.part_fit = 'n';
     particion_vacia.part_start = -1;
@@ -117,7 +115,6 @@ void crear_pp(char *nombre, char *path, int tamano, char fit,int unit){
     printf("-------------CREANDO PARTICION-------------\n");
 
     struct stat st = {0};
-    printf("%s\n",path);
     if(stat(path,&st)==-1){
         printf("ERROR: el archivo especificado no existe.\n");
         printf("-------------CREACION FALLIDA--------------\n\n");
@@ -139,106 +136,85 @@ void crear_pp(char *nombre, char *path, int tamano, char fit,int unit){
     if(fread(&leido,sizeof(MBR),1,disco)!=1){
         printf("ERROR:al cargar la data.del disco\n");
         printf("-------------CREACION FALLIDA--------------\n\n");
+        fclose(disco);
         return;
     }
 
-    int creado=0;
+    int tamano_real;
 
-    if(leido.mbr_partition_1.part_status=='-'){
-        leido.mbr_partition_1.part_status='n';
-        leido.mbr_partition_1.part_type='p';
-        leido.mbr_partition_1.part_fit=fit;
-        leido.mbr_partition_1.part_start=sizeof(MBR);
-        switch(unit){
-            case 1:
-                leido.mbr_partition_1.part_size=tamano*1024*1024;
-                break;
-            case 2:
-                leido.mbr_partition_1.part_size=tamano*1024;
-                break;
-            case 3:
-                leido.mbr_partition_1.part_size=tamano;
-                break;
-        }
-        strcpy(leido.mbr_partition_1.part_name,nombre);
-        creado = 1;
+    switch(unit){
+        case 1:
+            tamano_real=tamano*1024*1024;
+            break;
+        case 2:
+            tamano_real=tamano*1024;
+            break;
+        case 3:
+            tamano_real=tamano;
+            break;
     }
 
-    if(leido.mbr_partition_2.part_status=='-' && creado!=1){
-        leido.mbr_partition_2.part_status='n';
-        leido.mbr_partition_2.part_type='p';
-        leido.mbr_partition_2.part_fit=fit;
-        leido.mbr_partition_2.part_start=sizeof(MBR);
-        switch(unit){
-            case 1:
-                leido.mbr_partition_2.part_size=tamano*1024*1024;
-                break;
-            case 2:
-                leido.mbr_partition_2.part_size=tamano*1024;
-                break;
-            case 3:
-                leido.mbr_partition_2.part_size=tamano;
-                break;
-        }
-        strcpy(leido.mbr_partition_2.part_name,nombre);
-        creado = 1;
-    }
 
-    if(leido.mbr_partition_3.part_status=='-' && creado!=1){
-        leido.mbr_partition_3.part_status='n';
-        leido.mbr_partition_3.part_type='p';
-        leido.mbr_partition_3.part_fit=fit;
-        leido.mbr_partition_3.part_start=sizeof(MBR);
-        switch(unit){
-            case 1:
-                leido.mbr_partition_3.part_size=tamano*1024*1024;
-                break;
-            case 2:
-                leido.mbr_partition_3.part_size=tamano*1024;
-                break;
-            case 3:
-                leido.mbr_partition_3.part_size=tamano;
-                break;
-        }
-        strcpy(leido.mbr_partition_3.part_name,nombre);
-        creado = 1;
-    }
+    int posicion = lugar(leido,tamano_real);
 
-    if(leido.mbr_partition_4.part_status=='-' && creado!=1){
-        leido.mbr_partition_4.part_status='n';
-        leido.mbr_partition_4.part_type='p';
-        leido.mbr_partition_4.part_fit=fit;
-        leido.mbr_partition_4.part_start=sizeof(MBR);
-        switch(unit){
-            case 1:
-                leido.mbr_partition_4.part_size=tamano*1024*1024;
-                break;
-            case 2:
-                leido.mbr_partition_4.part_size=tamano*1024;
-                break;
-            case 3:
-                leido.mbr_partition_4.part_size=tamano;
-                break;
-        }
-        strcpy(leido.mbr_partition_4.part_name,nombre);
-        creado = 1;
-    }
-
-    if(creado){
-        fseek(disco,0,SEEK_SET);
-        fwrite(&leido,sizeof(MBR),1,disco);
-        printf("-------------CREACION EXITOSA--------------\n");
-    }else{
-        printf("ERROR: la cantidad maxima de particiones se ha exedido.\n");
+    if(posicion==0){
+        printf("ERROR: ya no es posible crear particion devido a que ya se a sobrepadaso el numero de particiones posibles.\n");
         printf("-------------CREACION FALLIDA--------------\n\n");
+        fclose(disco);
+        return;
     }
+
+    if(posicion==-1){
+        printf("ERROR: ya no es posible crear particion devido a que ya no espacio disponible.\n");
+        printf("-------------CREACION FALLIDA--------------\n\n");
+        fclose(disco);
+        return;
+    }
+
+    particion partnueva;
+
+    partnueva.part_status='s';
+    partnueva.part_type='p';
+    partnueva.part_fit=fit;
+    partnueva.part_start=sizeof(MBR);
+    switch(unit){
+        case 1:
+            partnueva.part_size=tamano*1024*1024;
+            break;
+        case 2:
+            partnueva.part_size=tamano*1024;
+            break;
+        case 3:
+            partnueva.part_size=tamano;
+            break;
+    }
+    strcpy(partnueva.part_name,nombre);
+
+    switch(posicion){
+        case 1:
+            leido.mbr_partition_1=partnueva;
+            break;
+        case 2:
+            leido.mbr_partition_2=partnueva;
+            break;
+        case 3:
+            leido.mbr_partition_3=partnueva;
+            break;
+        case 4:
+            leido.mbr_partition_4=partnueva;
+            break;
+    }
+
+    fseek(disco,0,SEEK_SET);
+    fwrite(&leido,sizeof(MBR),1,disco);
+    printf("-------------CREACION EXITOSA--------------\n");
+
     fclose(disco);
 
     disco = fopen(path,"r+b");
 
     if(!disco){
         printf("ERROR: el Disco no ha podido Abrirse.\n");
-        printf("-------------CREACION FALLIDA--------------\n\n");
         return;
     }
 
@@ -246,16 +222,16 @@ void crear_pp(char *nombre, char *path, int tamano, char fit,int unit){
 
     if(fread(&master,sizeof(MBR),1,disco)!=1){
         printf("ERROR:al cargar la data.del disco\n");
-        printf("-------------CREACION FALLIDA--------------\n\n");
+        fclose(disco);
         return;
     }
 
-    printf("%s\n",master.mbr_partition_1.part_name);
-    printf("%s\n",master.mbr_partition_2.part_name);
-    printf("%s\n",master.mbr_partition_3.part_name);
-    printf("%s\n",master.mbr_partition_4.part_name);
+    printf("Particion 1:\n\tNombre:%s\n\tInicio: %i\n\tTamano: %i\n",master.mbr_partition_1.part_name,master.mbr_partition_1.part_start,master.mbr_partition_1.part_size);
+    printf("Particion 2:\n\tNombre:%s\n\tInicio: %i\n\tTamano: %i\n",master.mbr_partition_2.part_name,master.mbr_partition_2.part_start,master.mbr_partition_2.part_size);
+    printf("Particion 3:\n\tNombre:%s\n\tInicio: %i\n\tTamano: %i\n",master.mbr_partition_3.part_name,master.mbr_partition_3.part_start,master.mbr_partition_3.part_size);
+    printf("Particion 4:\n\tNombre:%s\n\tInicio: %i\n\tTamano: %i\n",master.mbr_partition_4.part_name,master.mbr_partition_4.part_start,master.mbr_partition_4.part_size);
 
-
+    fclose(disco);
 }
 
 void crear_pl(char *nombre, char *path, int tamano, char fit,int unit){
@@ -280,6 +256,194 @@ void modificar_tamano_particion(char *name, char*path,char unit,int add){
     printf("-------------MODIFICAR PARTICION-----------\n");
     printf("Nombre: %s\nPath: %s\nTamano a Modificar: %i\nUnidades: %c\n",name,path,add,unit);
     printf("-------------ELIMINACION EXITOSA-----------\n\n");
+}
+
+int name_exist(FILE *disco,MBR mbr,char *name){
+
+    if(mbr.mbr_partition_1.part_status!='n')
+        if(strcmp(mbr.mbr_partition_1.part_name,name)==0)
+            return 1;
+
+    if(mbr.mbr_partition_2.part_status!='n')
+        if(strcmp(mbr.mbr_partition_2.part_name,name)==0)
+            return 1;
+
+    if(mbr.mbr_partition_3.part_status!='n')
+        if(strcmp(mbr.mbr_partition_3.part_name,name)==0)
+            return 1;
+
+    if(mbr.mbr_partition_4.part_status!='n')
+        if(strcmp(mbr.mbr_partition_4.part_name,name)==0)
+            return 1;
+
+    int extendida =0;
+
+    if(mbr.mbr_partition_1.part_status!='n')
+        if(mbr.mbr_partition_1.part_type=='e')
+            extendida = 1;
+
+    if(mbr.mbr_partition_1.part_status!='n')
+        if(mbr.mbr_partition_1.part_type=='e')
+            extendida = 2;
+
+    if(mbr.mbr_partition_1.part_status!='n')
+        if(mbr.mbr_partition_1.part_type=='e')
+            extendida = 3;
+
+    if(mbr.mbr_partition_1.part_status!='n')
+        if(mbr.mbr_partition_1.part_type=='e')
+            extendida = 4;
+
+    if(extendida!=0){
+        EBR leido;
+
+        switch(extendida){
+            case 1:
+                fseek(disco,0,mbr.mbr_partition_1.part_start-1);
+                fread(&leido,sizeof(EBR),1,disco);
+                break;
+            case 2:
+                fseek(disco,0,mbr.mbr_partition_2.part_start-1);
+                fread(&leido,sizeof(EBR),1,disco);
+                break;
+            case 3:
+                fseek(disco,0,mbr.mbr_partition_3.part_start-1);
+                fread(&leido,sizeof(EBR),1,disco);
+                break;
+            case 4:
+                fseek(disco,0,mbr.mbr_partition_4.part_start-1);
+                fread(&leido,sizeof(EBR),1,disco);
+                break;
+        }
+
+        if(leido.part_status!='n'){
+            while(leido.part_next!=-1){
+                if(strcmp(leido.part_name,name)==0)
+                    return 1;
+                fseek(disco,0,leido.part_start+leido.part_size-2);
+                fread(&leido,sizeof(EBR),1,disco);
+            }
+            if(strcmp(leido.part_name,name)==0)
+                return 1;
+        }
+    }
+
+    return 0;
+}
+
+int lugar(MBR mbr,int tamano){
+    int bloques[4] = {1,1,1,1};
+
+    for(int i=0;i<4;i++)
+        switch(i){
+            case 0:
+                if(mbr.mbr_partition_1.part_status=='n')
+                    bloques[i]=0;
+                break;
+            case 1:
+                if(mbr.mbr_partition_2.part_status=='n')
+                    bloques[i]=0;
+                break;
+            case 2:
+                if(mbr.mbr_partition_3.part_status=='n')
+                    bloques[i]=0;
+                break;
+            case 3:
+                if(mbr.mbr_partition_4.part_status=='n')
+                    bloques[i]=0;
+                break;
+        }
+
+    if(bloques[0]==1 && bloques[1]==1 && bloques[2]==1 && bloques[3]==1){
+        return 0;
+    }
+
+    if(bloques[0]==1 && bloques[1]==1 && bloques[2]==1 && bloques[3]==0){
+        if((tamano+mbr.mbr_partition_1.part_start+mbr.mbr_partition_1.part_size)-1<mbr.mbr_tamano)
+            return 2;
+    }
+
+    if(bloques[0]==1 && bloques[1]==1 && bloques[2]==0 && bloques[3]==1){
+        if((tamano+mbr.mbr_partition_2.part_start+mbr.mbr_partition_2.part_size)-1<mbr.mbr_partition_4.part_start)
+            return 3;
+    }
+
+    if(bloques[0]==1 && bloques[1]==0 && bloques[2]==1 && bloques[3]==1){
+        if((tamano+mbr.mbr_partition_1.part_start+mbr.mbr_partition_1.part_size)-1<mbr.mbr_partition_3.part_start)
+            return 2;
+    }
+
+    if(bloques[0]==0 && bloques[1]==1 && bloques[2]==1 && bloques[3]==1){
+        if((tamano+sizeof(MBR))<mbr.mbr_partition_2.part_start)
+            return 1;
+    }
+
+    if(bloques[0]==0 && bloques[1]==1 && bloques[2]==1 && bloques[3]==0){
+        if((tamano+sizeof(MBR))<mbr.mbr_partition_2.part_start)
+            return 1;
+        else if(tamano+(mbr.mbr_partition_3.part_start+mbr.mbr_partition_3.part_size)-1<mbr.mbr_tamano)
+            return 4;
+    }
+
+    if(bloques[0]==0 && bloques[1]==1 && bloques[2]==0 && bloques[3]==1){
+        if((tamano+sizeof(MBR))<mbr.mbr_partition_2.part_start)
+            return 1;
+        else if(tamano+(mbr.mbr_partition_2.part_start+mbr.mbr_partition_2.part_size)-1<mbr.mbr_partition_4.part_start)
+            return 3;
+    }
+
+    if(bloques[0]==0 && bloques[1]==0 && bloques[2]==1 && bloques[3]==1){
+        if(tamano+sizeof(MBR)<mbr.mbr_partition_3.part_start)
+            return 1;
+    }
+
+    if(bloques[0]==1 && bloques[1]==0 && bloques[2]==1 && bloques[3]==0){
+        if((tamano+mbr.mbr_partition_1.part_start+mbr.mbr_partition_1.part_size)<mbr.mbr_partition_3.part_start)
+            return 2;
+        else if(tamano+(mbr.mbr_partition_3.part_start+mbr.mbr_partition_3.part_size)-1<mbr.mbr_tamano)
+            return 4;
+    }
+
+    if(bloques[0]==1 && bloques[1]==1 && bloques[2]==0 && bloques[3]==0){
+        if(tamano+(mbr.mbr_partition_2.part_start+mbr.mbr_partition_2.part_size)-1<mbr.mbr_tamano)
+            return 3;
+    }
+
+    if(bloques[0]==1 && bloques[1]==0 && bloques[2]==0 && bloques[3]==1){
+        if(tamano+(mbr.mbr_partition_1.part_start+mbr.mbr_partition_1.part_size)-1<mbr.mbr_partition_4.part_start)
+            return 2;
+    }
+
+    if(bloques[0]==1 && bloques[1]==0 && bloques[2]==0 && bloques[3]==0){
+        if(tamano+(mbr.mbr_partition_1.part_start+mbr.mbr_partition_1.part_size)-1<mbr.mbr_tamano)
+            return 2;
+    }
+
+    if(bloques[0]==0 && bloques[1]==1 && bloques[2]==0 && bloques[3]==0){
+        if((tamano+sizeof(MBR))<mbr.mbr_partition_2.part_start)
+            return 1;
+        else if(tamano+(mbr.mbr_partition_2.part_start+mbr.mbr_partition_2.part_size)-1<mbr.mbr_tamano)
+            return 3;
+    }
+
+    if(bloques[0]==0 && bloques[1]==0 && bloques[2]==1 && bloques[3]==0){
+        if((tamano+sizeof(MBR))<mbr.mbr_partition_3.part_start)
+            return 1;
+        else if(tamano+(mbr.mbr_partition_3.part_start+mbr.mbr_partition_3.part_size)-1<mbr.mbr_tamano)
+            return 4;
+    }
+
+    if(bloques[0]==0 && bloques[1]==0 && bloques[2]==0 && bloques[3]==1){
+        if((tamano+sizeof(MBR))<mbr.mbr_partition_4.part_start)
+            return 1;
+    }
+
+    if(bloques[0]==0 && bloques[1]==0 && bloques[2]==0 && bloques[3]==0){
+        if((tamano+sizeof(MBR))<mbr.mbr_tamano)
+            return 1;
+    }
+
+    return -1;
 }
 
 int crear_directorios(char *path){
