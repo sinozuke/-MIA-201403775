@@ -23,7 +23,7 @@
 
 1470534638 /home/son/git-repos/-MIA-201403775/comandos.h
 
-1470952932 source:/home/son/git-repos/-MIA-201403775/comandos.c
+1470997343 source:/home/son/git-repos/-MIA-201403775/comandos.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
@@ -38,7 +38,7 @@
 
 1470340350 source:/home/son/git-repos/-MIA-201403775/func_generacion.h
 
-1470989006 source:/home/son/git-repos/-MIA-201403775/funciones.c
+1471015600 source:/home/son/git-repos/-MIA-201403775/funciones.c
 	<stdio.h>
 	<string.h>
 	<sys/types.h>
@@ -53,6 +53,6 @@
 
 1470516833 source:/home/son/git-repos/-MIA-201403775/funciones.h
 
-1470848398 /home/son/git-repos/-MIA-201403775/Datos.h
+1471015801 /home/son/git-repos/-MIA-201403775/Datos.h
 	<time.h>
 

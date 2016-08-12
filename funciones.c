@@ -425,7 +425,7 @@ void crear_pe(char *nombre, char *path, int tamano, char fit,int unit){
 
 void crear_pl(char nombre[200], char path[200], int tamano, char fit,int unit){
     printf("-------------CREANDO PARTICION-------------\n");
-    printf("%s\n",path);
+
     struct stat st = {0};
     if(stat(path,&st)==-1){
         printf("ERROR: el archivo especificado no existe.\n");
@@ -478,9 +478,10 @@ void crear_pl(char nombre[200], char path[200], int tamano, char fit,int unit){
         return;
     }
 
-    if(name_exist(disco,leido,nombre)==1){
+    if(name_exist(disco,leido,nombre)!=0){
         printf("ERROR: El nombre ya existe como particion.\n");
         printf("-------------CREACION FALLIDA--------------\n\n");
+        fclose(disco);
         return;
     }
 
@@ -519,41 +520,62 @@ void crear_pl(char nombre[200], char path[200], int tamano, char fit,int unit){
     }
 
     int bandera = 1;
-    int tamano_recorrido = (int)sizeof(EBR);
+    int tamano_recorrido = (int)sizeof(EBR)+leido2.part_size;
 
     while(1){
-        if(leido2.part_status=='n'){
-            if(tamano_real<=leido2.part_size){
+        if(leido2.part_status='n' && leido2.part_next==-1){
+            if(tamano_real<=(tamano_particion-sizeof(EBR)-tamano_recorrido)){
                 leido2.part_fit=fit;
                 strcpy(leido2.part_name,nombre);
                 leido2.part_size=tamano_real;
-                leido2.part_start=inicio+tamano_recorrido;
+                leido2.part_start=inicio + tamano_recorrido;
                 leido2.part_status='s';
+                leido2.part_next = leido2.part_start + leido2.part_size;
+
                 fseek(disco,-sizeof(EBR),SEEK_CUR);
                 fwrite(&leido2,sizeof(EBR),1,disco);
+
+                fseek(disco,leido2.part_size,SEEK_CUR);
+
+                EBR nuevoebr;
+                nuevoebr.part_fit='n';
+                strcpy(nuevoebr.part_name,"-vacio-");
+                nuevoebr.part_next=-1;
+                nuevoebr.part_size=0;
+                nuevoebr.part_start=0;
+                nuevoebr.part_status='n';
+
+                fwrite(&nuevoebr,sizeof(EBR),1,disco);
+
                 bandera = 0;
                 break;
-            }
-        }
-        if(leido2.part_next==-1){
-            if(tamano_real<=(tamano_particion-(tamano_recorrido+leido2.part_size+sizeof(EBR)))){
-                leido2.part_next=leido2.part_start+leido2.part_size;
-                EBR nuevoebr;
-                nuevoebr.part_fit=fit;
-                strcpy(nuevoebr.part_name,nombre);
-                nuevoebr.part_next=-1;
-                nuevoebr.part_size=tamano_real;
-                nuevoebr.part_start=leido2.part_start+leido2.part_size+sizeof(EBR);
-                nuevoebr.part_status='s';
-                fseek(disco,-sizeof(EBR),SEEK_CUR);
-                fwrite(&leido2,sizeof(EBR),1,disco);
-                fseek(disco,leido2.part_size,SEEK_CUR);
-                fwrite(&nuevoebr,sizeof(EBR),1,disco);
-                bandera=0;
-                break;
             }else{
-                bandera = -1;
-                break;
+                bandera =-1;
+                return;
+            }
+        }else{
+            if((leido2.part_next-(leido2.part_start+leido2.part_size))>0){
+                if(tamano_real<=(leido2.part_next-(leido2.part_start+leido2.part_size+sizeof(EBR)))){
+
+                    EBR nuevoe;
+                    nuevoe.part_fit=fit;
+                    strcpy(nuevoe.part_name,nombre);
+                    nuevoe.part_next=leido2.part_next;
+                    nuevoe.part_size=tamano_real;
+                    nuevoe.part_start=leido2.part_start+leido2.part_size+sizeof(EBR);
+                    nuevoe.part_status='s';
+
+                    leido2.part_next=leido2.part_start+leido2.part_size;
+
+                    fseek(disco,-sizeof(MBR),SEEK_CUR);
+                    fwrite(&leido2,sizeof(EBR),1,disco);
+
+                    fseek(disco,leido2.part_size,SEEK_CUR);
+                    fwrite(&nuevoe,sizeof(EBR),1,disco);
+
+                    bandera = 0;
+                    break;
+                }
             }
         }
         tamano_recorrido+=leido2.part_size+sizeof(EBR);
@@ -673,6 +695,272 @@ void crear_pl(char nombre[200], char path[200], int tamano, char fit,int unit){
 void eliminar_particion(char *name,char *path,char tipo){
     printf("-------------ELIMINAR PARTICION------------\n");
     printf("Nombre: %s\nPath: %s\nTipo: %c\n",name,path,tipo);
+
+    struct stat st = {0};
+    if(stat(path,&st)==-1){
+        printf("ERROR: el archivo especificado no existe.\n");
+        printf("-----------ELIMINACION FALLIDA-----------\n\n");
+        return;
+    }
+
+    FILE *disco;
+
+    disco = fopen(path,"r+b");
+
+    if(!disco){
+        printf("ERROR: el Disco no ha podido Abrirse.\n");
+        printf("-----------ELIMINACION FALLIDA-----------\n\n");
+        return;
+    }
+
+    MBR leido;
+
+    if(fread(&leido,sizeof(MBR),1,disco)!=1){
+        printf("ERROR:al cargar la data del disco\n");
+        printf("-----------ELIMINACION FALLIDA-----------\n\n");
+        fclose(disco);
+        return;
+    }
+
+    if(tipo=='a'){
+        switch(name_exist(disco,leido,name)){
+            case 0:
+                printf("ERROR: No existe la particion.\n");
+                printf("----------ELIMINACION FALLIDA----------\n\n");
+                fclose(disco);
+                return;
+            case 1:
+                    if(leido.mbr_partition_1.part_status!='n')
+                        if(strcmp(leido.mbr_partition_1.part_name,name)==0){
+                            leido.mbr_partition_1.part_status='n';
+                        }
+
+                    if(leido.mbr_partition_2.part_status!='n')
+                        if(strcmp(leido.mbr_partition_2.part_name,name)==0){
+                            leido.mbr_partition_1.part_status='n';
+                        }
+
+                    if(leido.mbr_partition_3.part_status!='n')
+                        if(strcmp(leido.mbr_partition_3.part_name,name)==0){
+                            leido.mbr_partition_1.part_status='n';
+                        }
+
+                    if(leido.mbr_partition_4.part_status!='n')
+                        if(strcmp(leido.mbr_partition_4.part_name,name)==0){
+                            leido.mbr_partition_1.part_status='n';
+                        }
+                    fseek(disco,0,SEEK_SET);
+                    fwrite(&leido,sizeof(MBR),1,disco);
+                break;
+            case 2:
+                    int extendida =0;
+
+                    if(leido.mbr_partition_1.part_status!='n')
+                        if(mbr.mbr_partition_1.part_type=='e')
+                            extendida = 1;
+
+                    if(leido.mbr_partition_1.part_status!='n')
+                        if(mbr.mbr_partition_1.part_type=='e')
+                            extendida = 2;
+
+                    if(leido.mbr_partition_1.part_status!='n')
+                        if(mbr.mbr_partition_1.part_type=='e')
+                            extendida = 3;
+
+                    if(leido.mbr_partition_1.part_status!='n')
+                        if(mbr.mbr_partition_1.part_type=='e')
+                            extendida = 4;
+
+                    if(extendida!=0){
+                        EBR leidoe;
+
+                        switch(extendida){
+                        case 1:
+                            if(fseek(disco,leido.mbr_partition_1.part_start,SEEK_SET)!=0){
+                                printf("cagada.\n");
+                                break;
+                            };
+                            break;
+                        case 2:
+                            if(fseek(disco,leido.mbr_partition_2.part_start,SEEK_SET)!=0){
+                                printf("cagada.\n");
+                                break;
+                            };
+                            break;
+                        case 3:
+                            if(fseek(disco,leido.mbr_partition_3.part_start,SEEK_SET)!=0){
+                                printf("cagada.\n");
+                                break;
+                            };
+                            break;
+                        case 4:
+                            if(fseek(disco,leido.mbr_partition_4.part_start,SEEK_SET)!=0){
+                                printf("cagada.\n");
+                            };
+                            break;
+                        }
+
+                        if(fread(&leidoe,sizeof(EBR),1,disco)!=1){
+                            printf("ERROR:al cargar la data del disco\n");
+                            fclose(disco);
+                            return-1;
+                        }
+
+                        EBR anterior;
+                        anterior = leidoe;
+                        while(strcmp(leidoe.part_name,name)!=0 && leidoe.part_next!=-1){
+                             if(fseek(disco,leidoe.part_size,SEEK_CUR)!=0){
+                                printf("cagada.\n");
+                                break;
+                            };
+                            anterior=leidoe;
+                            if(fread(&leidoe,sizeof(EBR),1,disco)!=1){
+                                printf("cagada.\n");
+                                break;
+                            };
+                        }
+
+                        if(strcmp(leidoe.part_name,name)==0){
+                            anterior.part_next=leidoe.part_next;
+                            fseek(disco,-2*sizeof(EBR)-anterior.part_size,SEEK_CUR);
+                            fwrite(&anterior,sizeof(EBR),1,disco);
+                        }
+                    }
+                break;
+        }
+    }else if(tipo=='u'){
+
+            case 0:
+                printf("ERROR: No existe la particion.\n");
+                printf("----------ELIMINACION FALLIDA----------\n\n");
+                fclose(disco);
+                return;
+            case 1:
+                    if(leido.mbr_partition_1.part_status!='n')
+                        if(strcmp(leido.mbr_partition_1.part_name,name)==0){
+                            leido.mbr_partition_1.part_status='n';
+                            fseek(disco,leido.mbr_partition_1.part_start,SEEK_SET);
+                            char byte = '\0';
+                            fwrite(&byte,sizeof(char),leido.mbr_tamano,disco);
+                        }
+
+                    if(leido.mbr_partition_2.part_status!='n')
+                        if(strcmp(leido.mbr_partition_2.part_name,name)==0){
+                            leido.mbr_partition_2.part_status='n';
+                            fseek(disco,leido.mbr_partition_2.part_start,SEEK_SET);
+                            char byte = '\0';
+                            fwrite(&byte,sizeof(char),leido.mbr_tamano,disco);
+                        }
+
+                    if(leido.mbr_partition_3.part_status!='n')
+                        if(strcmp(leido.mbr_partition_3.part_name,name)==0){
+                            leido.mbr_partition_3.part_status='n';
+                            fseek(disco,leido.mbr_partition_3.part_start,SEEK_SET);
+                            char byte = '\0';
+                            fwrite(&byte,sizeof(char),leido.mbr_tamano,disco);
+                        }
+                    if(leido.mbr_partition_4.part_status!='n')
+                        if(strcmp(leido.mbr_partition_4.part_name,name)==0){
+                            leido.mbr_partition_4.part_status='n';
+                            fseek(disco,leido.mbr_partition_4.part_start,SEEK_SET);
+                            char byte = '\0';
+                            fwrite(&byte,sizeof(char),leido.mbr_tamano,disco);
+                        }
+                    fseek(disco,0,SEEK_SET);
+                    fwrite(&leido,sizeof(MBR),1,disco);
+                break;
+            case 2:
+                    int extendida =0;
+
+                    if(leido.mbr_partition_1.part_status!='n')
+                        if(mbr.mbr_partition_1.part_type=='e')
+                            extendida = 1;
+
+                    if(leido.mbr_partition_1.part_status!='n')
+                        if(mbr.mbr_partition_1.part_type=='e')
+                            extendida = 2;
+
+                    if(leido.mbr_partition_1.part_status!='n')
+                        if(mbr.mbr_partition_1.part_type=='e')
+                            extendida = 3;
+
+                    if(leido.mbr_partition_1.part_status!='n')
+                        if(mbr.mbr_partition_1.part_type=='e')
+                            extendida = 4;
+
+                    if(extendida!=0){
+                        EBR leidoe;
+
+                        switch(extendida){
+                        case 1:
+                            if(fseek(disco,leido.mbr_partition_1.part_start,SEEK_SET)!=0){
+                                printf("cagada.\n");
+                                break;
+                            };
+                            break;
+                        case 2:
+                            if(fseek(disco,leido.mbr_partition_2.part_start,SEEK_SET)!=0){
+                                printf("cagada.\n");
+                                break;
+                            };
+                            break;
+                        case 3:
+                            if(fseek(disco,leido.mbr_partition_3.part_start,SEEK_SET)!=0){
+                                printf("cagada.\n");
+                                break;
+                            };
+                            break;
+                        case 4:
+                            if(fseek(disco,leido.mbr_partition_4.part_start,SEEK_SET)!=0){
+                                printf("cagada.\n");
+                            };
+                            break;
+                        }
+
+                        if(fread(&leidoe,sizeof(EBR),1,disco)!=1){
+                            printf("ERROR:al cargar la data del disco\n");
+                            fclose(disco);
+                            return-1;
+                        }
+                        EBR anterior;
+                        anterior=leidoe;
+                        while(leidoe.part_next!=-1){
+                            if(leidoe.part_status=='s' && strcmp(leidoe.part_name,name)==0 && leidoe.part_next!=-1){
+                                leidoe.part_status='n';
+                                fseek(disco,leidoe.part_start,SEEK_SET);
+                                char byte = '\0';
+                                fwrite(&byte,sizeof(char),leidoe.part_size,disco);
+                                break;
+                            }else if(leidoe.part_status=='s' && strcmp(leidoe.part_name,name)==0 && leidoe.part_next==-1){
+                                anterior.part_next=-1;
+                                fseek(disco,-(sizeof(EBR)+anterior.part_size),SEEK_CUR);
+                            }
+                            //printf("EBR:\n\tFit: %c\n\tNombre: %s\n\tNext: %i\n\tSize: %i\n\tStart: %i\n\tStatus: %c\n",leido.part_fit,leido.part_name,leido.part_next,leido.part_size,leido.part_start,leido.part_status);
+                            if(fseek(disco,leidoe.part_size,SEEK_CUR)!=0){
+                                printf("cagada.\n");
+                                break;
+                            };
+                            anterior = leidoe;
+                            if(fread(&leidoe,sizeof(EBR),1,disco)!=1){
+                                printf("cagada.\n");
+                                break;
+                            };
+                        }
+
+                        if(leidoe.part_status=='s' && strcmp(leido.part_name,name)==0)return 2;
+                        //printf("EBR:\n\tFit: %c\n\tNombre: %s\n\tNext: %i\n\tSize: %i\n\tStart: %i\n\tStatus: %c\n",leido2.part_fit,leido2.part_name,leido2.part_next,leido2.part_size,leido2.part_start,leido2.part_status);
+                        if(fseek(disco,-sizeof(EBR),SEEK_CUR)!=0){
+                                printf("cagada.\n");
+                                break;
+                        };
+                        fwrite(&leidoe,sizeof(EBR),1,disco);
+                        fclose("-----------ELIMINACION EXITOSA-----------\n\n");
+                        return;
+                    }
+                break;
+        }
+    }
+    fclose(disco);
     printf("-------------ELIMINACION EXITOSA-----------\n\n");
 }
 
@@ -754,7 +1042,7 @@ int name_exist(FILE *disco,MBR mbr,char *name){
         }
 
         while(leido.part_next!=-1){
-            if(strcmp(leido.part_name,name)==0)return 1;
+            if(leido.part_status=='s' && strcmp(leido.part_name,name)==0)return 2;
             //printf("EBR:\n\tFit: %c\n\tNombre: %s\n\tNext: %i\n\tSize: %i\n\tStart: %i\n\tStatus: %c\n",leido.part_fit,leido.part_name,leido.part_next,leido.part_size,leido.part_start,leido.part_status);
             if(fseek(disco,leido.part_size,SEEK_CUR)!=0){
                 printf("cagada.\n");
@@ -766,7 +1054,7 @@ int name_exist(FILE *disco,MBR mbr,char *name){
             };
         }
 
-        if(strcmp(leido.part_name,name)==0)return 1;
+        if(leido.part_status=='s' && strcmp(leido.part_name,name)==0)return 2;
         //printf("EBR:\n\tFit: %c\n\tNombre: %s\n\tNext: %i\n\tSize: %i\n\tStart: %i\n\tStatus: %c\n",leido2.part_fit,leido2.part_name,leido2.part_next,leido2.part_size,leido2.part_start,leido2.part_status);
     }
     return 0;

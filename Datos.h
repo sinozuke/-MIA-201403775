@@ -3,7 +3,7 @@
 
 #include <time.h>
 
-typedef struct Partition{
+typedef struct{
     char part_status;
     char part_type;
     char part_fit;
@@ -12,7 +12,7 @@ typedef struct Partition{
     char part_name[16];
 } particion;
 
-typedef struct Master_Boot_Record{
+typedef struct{
     int mbr_tamano;
     time_t mbr_fecha_creacion;
     int mbr_disk_signature;
@@ -22,7 +22,7 @@ typedef struct Master_Boot_Record{
     particion mbr_partition_4;
 } MBR;
 
-typedef struct Extended_Boot_Record{
+typedef struct{
     char part_status;
     char part_fit;
     int part_start;
@@ -31,7 +31,7 @@ typedef struct Extended_Boot_Record{
     char part_name[16];
 } EBR;
 
-typedef struct Super_Bloque{
+typedef struct{
     int s_file_system_type;
     int s_inodes_count;
     int s_blocks_count;
@@ -51,7 +51,7 @@ typedef struct Super_Bloque{
     int s_block_start;
 } SB;
 
-typedef struct Inodo{
+typedef struct{
     int i_nlink;
     char i_pathlink;
     int i_uid;
@@ -65,9 +65,10 @@ typedef struct Inodo{
     int i_perm;
 } inodo;
 
-typedef struct Content{
+typedef struct{
     char bname[12];
     int b_inodo;
 } content;
+
 
 #endif // DATOS_H_INCLUDED
