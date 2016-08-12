@@ -87,6 +87,10 @@ void mkdisk(char *token)
                     valor[i]='\0';
                     while(!pasa(valor,0,1)){
                         token = strtok(NULL," ");
+                        if(!token){
+                            printf("ERROR: se ha llegado al final de lectura sin terminar el valor con la doble comillas.\n");
+                            return;
+                        }
                         strcat(valor," ");
                         strcat(valor,token);
                     }
@@ -109,9 +113,12 @@ void mkdisk(char *token)
                     for(i=0;token[i+7]!='\0';i++)
                         valor[i]=token[i+7];
                     valor[i]='\0';
-                    printf("%s\n",valor);
                     while(!pasa(valor,0,1)){
                         token = strtok(NULL," ");
+                        if(!token){
+                            printf("ERROR: se ha llegado al final de lectura sin terminar el valor con la doble comillas.\n");
+                            return;
+                        }
                         strcat(valor," ");
                         strcat(valor,token);
                     }
@@ -293,6 +300,10 @@ void fdisk(char *token)
                     valor[i]='\0';
                     while(!pasa(valor,0,1)){
                         token = strtok(NULL," ");
+                        if(!token){
+                            printf("ERROR: se ha llegado al final de lectura sin terminar el valor con la doble comillas.\n");
+                            return;
+                        }
                         strcat(valor," ");
                         strcat(valor,token);
                     }
@@ -317,6 +328,10 @@ void fdisk(char *token)
                     valor[i]='\0';
                     while(!pasa(valor,0,1)){
                         token = strtok(NULL," ");
+                        if(!token){
+                            printf("ERROR: se ha llegado al final de lectura sin terminar el valor con la doble comillas.\n");
+                            return;
+                        }
                         strcat(valor," ");
                         strcat(valor,token);
                     }
@@ -616,35 +631,43 @@ int k_m(char *valor){
 }
 
 int parametros(char *token){
-    char *pos = strstr(token,"-size");
+
+    char cadena[100];
+
+    strcpy(cadena,token);
+
+    for(int i = 0; cadena[i]; i++)
+        cadena[i] = tolower(cadena[i]); //<--convierte a minusculas
+
+    char *pos = strstr(cadena,"-size");
     if(pos){
         return 1;
     }
-    pos = strstr(token,"+unit");
+    pos = strstr(cadena,"+unit");
     if(pos){
         return 2;
     }
-    pos = strstr(token,"-path");
+    pos = strstr(cadena,"-path");
     if(pos){
         return 3;
     }
-    pos = strstr(token,"-name");
+    pos = strstr(cadena,"-name");
     if(pos){
         return 4;
     }
-    pos = strstr(token,"+type");
+    pos = strstr(cadena,"+type");
     if(pos){
         return 5;
     }
-    pos = strstr(token,"+fit");
+    pos = strstr(cadena,"+fit");
     if(pos){
         return 6;
     }
-    pos = strstr(token,"+delete");
+    pos = strstr(cadena,"+delete");
     if(pos){
         return 7;
     }
-    pos = strstr(token,"+add");
+    pos = strstr(cadena,"+add");
     if(pos){
         return 8;
     }
@@ -702,21 +725,29 @@ int pasa(char *token,int opcion1,int opcion2){
 }
 
 int opcion(char *token){
-    if(strcmp(token, "mkdisk")==0)
+
+    char cadena[100];
+
+    strcpy(cadena,token);
+
+    for(int i = 0; cadena[i]; i++)
+        cadena[i] = tolower(cadena[i]); //<--convierte a minusculas
+
+    if(strcmp(cadena, "mkdisk")==0)
         return 1;
-    if(strcmp(token, "rmdisk")==0)
+    if(strcmp(cadena, "rmdisk")==0)
         return 2;
-    if(strcmp(token, "fdisk")==0)
+    if(strcmp(cadena, "fdisk")==0)
         return 3;
-    if(strcmp(token, "mount")==0)
+    if(strcmp(cadena, "mount")==0)
         return 4;
-    if(strcmp(token, "umount")==0)
+    if(strcmp(cadena, "umount")==0)
         return 5;
-    if(strcmp(token, "rep")==0)
+    if(strcmp(cadena, "rep")==0)
         return 6;
-    if(strcmp(token, "exec")==0)
+    if(strcmp(cadena, "exec")==0)
         return 7;
-    if(strcmp(token, "exit")==0)
+    if(strcmp(cadena, "exit")==0)
         return 8;
     return 0;
 }

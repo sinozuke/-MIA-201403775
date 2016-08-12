@@ -13,8 +13,6 @@ int main()
 {
    while(1){
         gets(cadena);
-        for(int i = 0; cadena[i]; i++)
-            cadena[i] = tolower(cadena[i]); //<--convierte a minusculas
         token = strtok(cadena, " ");
         while (token) {
                 switch(opcion(token)){
