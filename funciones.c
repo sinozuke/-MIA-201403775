@@ -473,7 +473,14 @@ void crear_pl(char nombre[200], char path[200], int tamano, char fit,int unit){
 
     if(parti==0){
         printf("ERROR: no exite una particion extendida.\n");
+        printf("-------------CREACION FALLIDA--------------\n\n");
         fclose(disco);
+        return;
+    }
+
+    if(name_exist(disco,leido,nombre)==1){
+        printf("ERROR: El nombre ya existe como particion.\n");
+        printf("-------------CREACION FALLIDA--------------\n\n");
         return;
     }
 
@@ -565,7 +572,7 @@ void crear_pl(char nombre[200], char path[200], int tamano, char fit,int unit){
 
     /* prueba de datos */
 
-    disco = fopen(path,"r+b");
+/*    disco = fopen(path,"r+b");
 
     if(!disco){
         printf("ERROR: el Disco no ha podido Abrirse.\n");
@@ -660,6 +667,7 @@ void crear_pl(char nombre[200], char path[200], int tamano, char fit,int unit){
     printf("EBR:\n\tFit: %c\n\tNombre: %s\n\tNext: %i\n\tSize: %i\n\tStart: %i\n\tStatus: %c\n",leido2.part_fit,leido2.part_name,leido2.part_next,leido2.part_size,leido2.part_start,leido2.part_status);
 
     fclose(disco);
+*/
 }
 
 void eliminar_particion(char *name,char *path,char tipo){
@@ -714,36 +722,53 @@ int name_exist(FILE *disco,MBR mbr,char *name){
         EBR leido;
 
         switch(extendida){
-            case 1:
-                fseek(disco,mbr.mbr_partition_1.part_start,SEEK_SET);
-                fread(&leido,sizeof(EBR),1,disco);
+        case 1:
+            if(fseek(disco,mbr.mbr_partition_1.part_start,SEEK_SET)!=0){
+                printf("cagada.\n");
                 break;
-            case 2:
-                fseek(disco,mbr.mbr_partition_2.part_start,SEEK_SET);
-                fread(&leido,sizeof(EBR),1,disco);
+            };
+            break;
+        case 2:
+            if(fseek(disco,mbr.mbr_partition_2.part_start,SEEK_SET)!=0){
+                printf("cagada.\n");
                 break;
-            case 3:
-                fseek(disco,mbr.mbr_partition_3.part_start,SEEK_SET);
-                fread(&leido,sizeof(EBR),1,disco);
+            };
+            break;
+        case 3:
+            if(fseek(disco,mbr.mbr_partition_3.part_start,SEEK_SET)!=0){
+                printf("cagada.\n");
                 break;
-            case 4:
-                fseek(disco,mbr.mbr_partition_4.part_start,SEEK_SET);
-                fread(&leido,sizeof(EBR),1,disco);
-                break;
+            };
+            break;
+        case 4:
+            if(fseek(disco,mbr.mbr_partition_4.part_start,SEEK_SET)!=0){
+                printf("cagada.\n");
+            };
+            break;
         }
 
-        if(leido.part_status!='n'){
-            while(leido.part_next!=-1){
-                if(strcmp(leido.part_name,name)==0)
-                    return 1;
-                fseek(disco,leido.part_start+leido.part_size,SEEK_SET);
-                fread(&leido,sizeof(EBR),1,disco);
-            }
-            if(strcmp(leido.part_name,name)==0)
-                return 1;
+        if(fread(&leido,sizeof(EBR),1,disco)!=1){
+            printf("ERROR:al cargar la data del disco\n");
+            fclose(disco);
+            return-1;
         }
+
+        while(leido.part_next!=-1){
+            if(strcmp(leido.part_name,name)==0)return 1;
+            //printf("EBR:\n\tFit: %c\n\tNombre: %s\n\tNext: %i\n\tSize: %i\n\tStart: %i\n\tStatus: %c\n",leido.part_fit,leido.part_name,leido.part_next,leido.part_size,leido.part_start,leido.part_status);
+            if(fseek(disco,leido.part_size,SEEK_CUR)!=0){
+                printf("cagada.\n");
+                break;
+            };
+            if(fread(&leido,sizeof(EBR),1,disco)!=1){
+                printf("cagada.\n");
+                break;
+            };
+        }
+
+        if(strcmp(leido.part_name,name)==0)return 1;
+        //printf("EBR:\n\tFit: %c\n\tNombre: %s\n\tNext: %i\n\tSize: %i\n\tStart: %i\n\tStatus: %c\n",leido2.part_fit,leido2.part_name,leido2.part_next,leido2.part_size,leido2.part_start,leido2.part_status);
     }
-
     return 0;
 }
 

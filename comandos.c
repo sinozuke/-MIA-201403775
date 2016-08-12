@@ -679,7 +679,7 @@ int parametros(char *token){
 char *ncomillas(char *a){
     char *r = malloc(sizeof(char)*strlen(a));
     int i;
-    for(i=0;a[i+1]!='\0';i++){
+    for(i=0;a[i+1]!='\"';i++){
         if(a[i+1]!='\"'){
             r[i]=a[i+1];
         }
