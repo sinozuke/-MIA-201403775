@@ -82,13 +82,14 @@ void mkdisk(char *token)
                         printf("ERROR: no se presenta el separador '::' entre el parametro 'path' y el valor.\n");
                         return;
                     }
-                    if(!pasa(token,0,1)){
-                        printf("ERROR: el valor del parametro 'path' no esta encerrado entre comillas.\n");
-                        return;
-                    }
                     for(i=0;token[i+7]!='\0';i++)
                         valor[i]=token[i+7];
                     valor[i]='\0';
+                    while(!pasa(valor,0,1)){
+                        token = strtok(NULL," ");
+                        strcat(valor," ");
+                        strcat(valor,token);
+                    }
                     valor_r = valor_real(longitud_real(valor),valor);
                     valor_r = ncomillas(valor_r);
                     path = malloc(sizeof(char)*strlen(valor_r));
@@ -108,7 +109,14 @@ void mkdisk(char *token)
                     for(i=0;token[i+7]!='\0';i++)
                         valor[i]=token[i+7];
                     valor[i]='\0';
+                    printf("%s\n",valor);
+                    while(!pasa(valor,0,1)){
+                        token = strtok(NULL," ");
+                        strcat(valor," ");
+                        strcat(valor,token);
+                    }
                     valor_r = valor_real(longitud_real(valor),valor);
+                    valor_r = ncomillas(valor_r);
                     nombre = malloc(sizeof(char)*strlen(valor_r));
                     strcpy(nombre,valor_r);
                 }else{
@@ -280,13 +288,14 @@ void fdisk(char *token)
                         printf("ERROR: no se presenta el separador '::' entre el parametro 'path' y el valor.\n");
                         return;
                     }
-                    if(!pasa(token,0,1)){
-                        printf("ERROR: el valor del parametro 'path' no esta encerrado entre comillas.\n");
-                        return;
-                    }
                     for(i=0;token[i+7]!='\0';i++)
                         valor[i]=token[i+7];
                     valor[i]='\0';
+                    while(!pasa(valor,0,1)){
+                        token = strtok(NULL," ");
+                        strcat(valor," ");
+                        strcat(valor,token);
+                    }
                     valor_r = valor_real(longitud_real(valor),valor);
                     valor_r = ncomillas(valor_r);
                     path = malloc(sizeof(char)*strlen(valor_r));
@@ -306,7 +315,13 @@ void fdisk(char *token)
                     for(i=0;token[i+7]!='\0';i++)
                         valor[i]=token[i+7];
                     valor[i]='\0';
+                    while(!pasa(valor,0,1)){
+                        token = strtok(NULL," ");
+                        strcat(valor," ");
+                        strcat(valor,token);
+                    }
                     valor_r = valor_real(longitud_real(valor),valor);
+                    valor_r = ncomillas(valor_r);
                     name = malloc(sizeof(char)*strlen(valor_r));
                     strcpy(name,valor_r);
                 }else{
@@ -517,6 +532,26 @@ void fdisk(char *token)
 
 }
 
+void mount(char *token)
+{
+
+}
+
+void umount(char *token)
+{
+
+}
+
+
+void rep(char *token){
+
+
+}
+
+void exec(char *token){
+
+}
+
 
 int isnumero(char *token){
 
@@ -541,26 +576,6 @@ char Fast_Full(char *valor){
         }
     }
     return 'n';
-
-}
-
-void mount(char *token)
-{
-
-}
-
-void umount(char *token)
-{
-
-}
-
-
-void rep(char *token){
-
-
-}
-
-void exec(char *token){
 
 }
 
