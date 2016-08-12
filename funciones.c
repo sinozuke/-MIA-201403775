@@ -423,9 +423,9 @@ void crear_pe(char *nombre, char *path, int tamano, char fit,int unit){
     fclose(disco);*/
 }
 
-void crear_pl(char *nombre, char *path, int tamano, char fit,int unit){
+void crear_pl(char nombre[200], char path[200], int tamano, char fit,int unit){
     printf("-------------CREANDO PARTICION-------------\n");
-
+    printf("%s\n",path);
     struct stat st = {0};
     if(stat(path,&st)==-1){
         printf("ERROR: el archivo especificado no existe.\n");
@@ -530,6 +530,7 @@ void crear_pl(char *nombre, char *path, int tamano, char fit,int unit){
         }
         if(leido2.part_next==-1){
             if(tamano_real<=(tamano_particion-(tamano_recorrido+leido2.part_size+sizeof(EBR)))){
+                leido2.part_next=leido2.part_start+leido2.part_size;
                 EBR nuevoebr;
                 nuevoebr.part_fit=fit;
                 strcpy(nuevoebr.part_name,nombre);
@@ -644,8 +645,6 @@ void crear_pl(char *nombre, char *path, int tamano, char fit,int unit){
         return;
     }
 
-    printf("EBR:\n\tFit: %c\n\tNombre: %s\n\tNext: %i\n\tSize: %i\n\tStart: %i\n\tStatus: %c\n",leido2.part_fit,leido2.part_name,leido2.part_next,leido2.part_size,leido2.part_start,leido2.part_status);
-
     while(leido2.part_next!=-1){
         printf("EBR:\n\tFit: %c\n\tNombre: %s\n\tNext: %i\n\tSize: %i\n\tStart: %i\n\tStatus: %c\n",leido2.part_fit,leido2.part_name,leido2.part_next,leido2.part_size,leido2.part_start,leido2.part_status);
         if(fseek(disco,leido2.part_size,SEEK_CUR)!=0){
@@ -658,8 +657,9 @@ void crear_pl(char *nombre, char *path, int tamano, char fit,int unit){
         };
     }
 
-    fclose(disco);
+    printf("EBR:\n\tFit: %c\n\tNombre: %s\n\tNext: %i\n\tSize: %i\n\tStart: %i\n\tStatus: %c\n",leido2.part_fit,leido2.part_name,leido2.part_next,leido2.part_size,leido2.part_start,leido2.part_status);
 
+    fclose(disco);
 }
 
 void eliminar_particion(char *name,char *path,char tipo){

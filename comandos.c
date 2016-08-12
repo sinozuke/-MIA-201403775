@@ -224,7 +224,7 @@ void fdisk(char *token)
     int add=0;
     int size;
     int unit = 2;
-    char *path;
+    char path[200];
     char *name;
     char type = 'p';
     char fit = 'w';
@@ -308,9 +308,11 @@ void fdisk(char *token)
                         strcat(valor,token);
                     }
                     valor_r = valor_real(longitud_real(valor),valor);
+                    printf("%s\n",valor_r);
                     valor_r = ncomillas(valor_r);
-                    path = malloc(sizeof(char)*strlen(valor_r));
+                    printf("%s\n",valor_r);
                     strcpy(path,valor_r);
+                    printf("%s\n",path);
                 }else{
                     printf("ERROR: el parametro 'path' esta declarado mas de una vez.\n");
                     return;
@@ -360,7 +362,7 @@ void fdisk(char *token)
                         return;
                     }
                     type=valor_r[0];
-                    if(!(type=='p' || type=='e' || type=='l')){
+                    if(!(type=='P' || type=='E' || type=='L'||type=='p' || type=='e' || type=='l')){
                         printf("ERROR: valor \"%s\" no permitido para el parametro 'type'.\n",valor_r);
                         return;
                     }
@@ -527,11 +529,11 @@ void fdisk(char *token)
                     }
                     break;
             }
-            if(type=='p')
+            if(type=='p' || type=='P')
                 crear_pp(name,path,size,fit,unit);
-            if(type=='e')
+            if(type=='e' || type=='E')
                 crear_pe(name,path,size,fit,unit);
-            if(type=='l')
+            if(type=='l' || type=='L')
                 crear_pl(name,path,size,fit,unit);
         }else{
             if(!p_name)
@@ -675,13 +677,14 @@ int parametros(char *token){
 }
 
 char *ncomillas(char *a){
-    char *r = malloc(sizeof(char)*(strlen(a)-2));
+    char *r = malloc(sizeof(char)*strlen(a));
     int i;
-    for(i=0;a[i+1];i++){
+    for(i=0;a[i+1]!='\0';i++){
         if(a[i+1]!='\"'){
             r[i]=a[i+1];
         }
     }
+    r[i]='\0';
     return r;
 }
 
