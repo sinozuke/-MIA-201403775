@@ -4,7 +4,7 @@
 #include <ctype.h>
 #include "comandos.h"
 #include "Datos.h"
-#define MAXLON 200
+#define MAXLON 300
 
 char* token;
 char cadena[MAXLON+1];

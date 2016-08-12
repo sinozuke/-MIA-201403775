@@ -156,7 +156,7 @@ void crear_pp(char *nombre, char *path, int tamano, char fit,int unit){
     }
 
     printf("-------------------DATOS-------------------\n");
-    printf("Nombre: %s\nPath: %s\n tamano: %i\nFit: %c\nUnit: %i\n",nombre,path,tamano_real,fit,unit);
+    printf("Nombre: %s\nPath: %s\nTamano: %i\nFit: %c\nUnit: %i\nTipo: Primaria\n",nombre,path,tamano_real,fit,unit);
 
 
     int posicion = lugar(leido,tamano_real);
@@ -187,7 +187,6 @@ void crear_pp(char *nombre, char *path, int tamano, char fit,int unit){
     partnueva.part_status='s';
     partnueva.part_type='p';
     partnueva.part_fit=fit;
-    partnueva.part_start=sizeof(MBR);
     switch(unit){
         case 1:
             partnueva.part_size=tamano*1024*1024;
@@ -203,15 +202,19 @@ void crear_pp(char *nombre, char *path, int tamano, char fit,int unit){
 
     switch(posicion){
         case 1:
+            partnueva.part_start=sizeof(MBR)+1;
             leido.mbr_partition_1=partnueva;
             break;
         case 2:
+            partnueva.part_start=leido.mbr_partition_1.part_start+leido.mbr_partition_1.part_size+1;
             leido.mbr_partition_2=partnueva;
             break;
         case 3:
+            partnueva.part_start=leido.mbr_partition_2.part_start+leido.mbr_partition_2.part_size+1;
             leido.mbr_partition_3=partnueva;
             break;
         case 4:
+            partnueva.part_start=leido.mbr_partition_3.part_start+leido.mbr_partition_3.part_size+1;
             leido.mbr_partition_4=partnueva;
             break;
     }
@@ -253,8 +256,164 @@ void crear_pl(char *nombre, char *path, int tamano, char fit,int unit){
 
 void crear_pe(char *nombre, char *path, int tamano, char fit,int unit){
     printf("-------------CREANDO PARTICION-------------\n");
-    printf("Nombre: %s\nPath: %s\nTamano: %i\nTipo: Extendida\nFit: %c\nUnit: %i\n",nombre,path,tamano,fit,unit);
+
+    struct stat st = {0};
+    if(stat(path,&st)==-1){
+        printf("ERROR: el archivo especificado no existe.\n");
+        printf("-------------CREACION FALLIDA--------------\n\n");
+        return;
+    }
+
+    FILE *disco;
+
+    disco = fopen(path,"r+b");
+
+    if(!disco){
+        printf("ERROR: el Disco no ha podido Abrirse.\n");
+        printf("-------------CREACION FALLIDA--------------\n\n");
+        return;
+    }
+
+    MBR leido;
+
+    if(fread(&leido,sizeof(MBR),1,disco)!=1){
+        printf("ERROR:al cargar la data.del disco\n");
+        printf("-------------CREACION FALLIDA--------------\n\n");
+        fclose(disco);
+        return;
+    }
+
+    int tamano_real;
+
+    switch(unit){
+        case 1:
+            tamano_real=tamano*1024*1024;
+            break;
+        case 2:
+            tamano_real=tamano*1024;
+            break;
+        case 3:
+            tamano_real=tamano;
+            break;
+    }
+
+    printf("-------------------DATOS-------------------\n");
+    printf("Nombre: %s\nPath: %s\nTamano: %i\nFit: %c\nUnit: %i\nTipo: Extendida\n",nombre,path,tamano_real,fit,unit);
+
+
+    int posicion = lugar(leido,tamano_real);
+
+    if(posicion==0){
+        printf("ERROR: ya no es posible crear particion devido a que ya se a sobrepadaso el numero de particiones posibles.\n");
+        printf("-------------CREACION FALLIDA--------------\n\n");
+        fclose(disco);
+        return;
+    }
+
+    if(posicion==-1){
+        printf("ERROR: ya no es posible crear particion devido a que ya no espacio disponible.\n");
+        printf("-------------CREACION FALLIDA--------------\n\n");
+        fclose(disco);
+        return;
+    }
+
+    if(name_exist(disco,leido,nombre)){
+        printf("ERROR: el nombre ya existen entre las particiones.\n");
+        printf("-------------CREACION FALLIDA--------------\n\n");
+        fclose(disco);
+        return;
+    }
+
+    particion partnueva;
+
+    partnueva.part_status='s';
+    partnueva.part_type='e';
+    partnueva.part_fit=fit;
+    partnueva.part_start=sizeof(MBR);
+    switch(unit){
+        case 1:
+            partnueva.part_size=tamano*1024*1024;
+            break;
+        case 2:
+            partnueva.part_size=tamano*1024;
+            break;
+        case 3:
+            partnueva.part_size=tamano;
+            break;
+    }
+    strcpy(partnueva.part_name,nombre);
+
+    switch(posicion){
+        case 1:
+            leido.mbr_partition_1=partnueva;
+            break;
+        case 2:
+            leido.mbr_partition_2=partnueva;
+            break;
+        case 3:
+            leido.mbr_partition_3=partnueva;
+            break;
+        case 4:
+            leido.mbr_partition_4=partnueva;
+            break;
+    }
+
+    fseek(disco,0,SEEK_SET);
+    fwrite(&leido,sizeof(MBR),1,disco);
+
+    EBR nuevoebr;
+
+    nuevoebr.part_fit='n';
+    strcpy(nuevoebr.part_name,"-vacio-");
+    nuevoebr.part_next=-1;
+    nuevoebr.part_size=0;
+    nuevoebr.part_start=-1;
+    nuevoebr.part_status='n';
+
+    switch(posicion){
+        case 1:
+            fseek(disco,0,leido.mbr_partition_1.part_start);
+            fwrite(&nuevoebr,sizeof(EBR),1,disco);
+            break;
+        case 2:
+            fseek(disco,0,leido.mbr_partition_1.part_start);
+            fwrite(&nuevoebr,sizeof(EBR),1,disco);
+            break;
+        case 3:
+            fseek(disco,0,leido.mbr_partition_1.part_start);
+            fwrite(&nuevoebr,sizeof(EBR),1,disco);
+            break;
+        case 4:
+            fseek(disco,0,leido.mbr_partition_1.part_start);
+            fwrite(&nuevoebr,sizeof(EBR),1,disco);
+            break;
+    }
+
     printf("-------------CREACION EXITOSA--------------\n");
+
+    fclose(disco);
+/*
+    disco = fopen(path,"r+b");
+
+    if(!disco){
+        printf("ERROR: el Disco no ha podido Abrirse.\n");
+        return;
+    }
+
+    MBR master;
+
+    if(fread(&master,sizeof(MBR),1,disco)!=1){
+        printf("ERROR:al cargar la data.del disco\n");
+        fclose(disco);
+        return;
+    }
+
+    printf("Particion 1:\n\tNombre:%s\n\tInicio: %i\n\tTamano: %i\n",master.mbr_partition_1.part_name,master.mbr_partition_1.part_start,master.mbr_partition_1.part_size);
+    printf("Particion 2:\n\tNombre:%s\n\tInicio: %i\n\tTamano: %i\n",master.mbr_partition_2.part_name,master.mbr_partition_2.part_start,master.mbr_partition_2.part_size);
+    printf("Particion 3:\n\tNombre:%s\n\tInicio: %i\n\tTamano: %i\n",master.mbr_partition_3.part_name,master.mbr_partition_3.part_start,master.mbr_partition_3.part_size);
+    printf("Particion 4:\n\tNombre:%s\n\tInicio: %i\n\tTamano: %i\n",master.mbr_partition_4.part_name,master.mbr_partition_4.part_start,master.mbr_partition_4.part_size);
+
+    fclose(disco);*/
 }
 
 void eliminar_particion(char *name,char *path,char tipo){

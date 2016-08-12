@@ -473,6 +473,30 @@ void fdisk(char *token)
         }
     }else{
         if(p_name*p_path*p_size){
+            if(((int)strlen(name))>15){
+                printf("ERROR: el nombre para la particion exede el tamano permitido de 14 caracteres.\n");
+                return;
+            }
+            switch(unit){
+                case 1:
+                    if(size<10){
+                        printf("ERROR: el tamano especificado es menor al limite permitido (10 MB).\n");
+                        return;
+                    }
+                    break;
+                case 2:
+                    if(size/1024<10){
+                        printf("ERROR: el tamano especificado es menor al limite permitido (10,240 KB).\n");
+                        return;
+                    }
+                    break;
+                case 3:
+                    if(((size)/1024)/1024<10){
+                        printf("ERROR: el tamano especificado es menor al limite permitido (10,485,760 B).\n");
+                        return;
+                    }
+                    break;
+            }
             if(type=='p')
                 crear_pp(name,path,size,fit,unit);
             if(type=='e')
