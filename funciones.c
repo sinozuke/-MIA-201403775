@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <time.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include "Datos.h"
 #include "funciones.h"
 
@@ -12,6 +12,8 @@ int crear_directorios(char *path);
 int lugar(MBR mbr,int tamano);
 int name_exist(FILE *disco,MBR mbr,char *name);
 int extendida_exist(MBR mbr);
+
+Montaje monstajes[26];
 
 void generar_disco(char *nombre,char *path, int tamano, int tipo){
 
@@ -47,7 +49,8 @@ void generar_disco(char *nombre,char *path, int tamano, int tipo){
 
     char *nombred = directorio;
     strcat(nombred,nombre);
-    strcat(nombred,".dsk");
+    if(strstr(nombred,".dsk")!=0)
+        strcat(nombred,".dsk");
     disco = fopen(nombred,"wb");
 
     if(!disco){
@@ -523,7 +526,7 @@ void crear_pl(char nombre[200], char path[200], int tamano, char fit,int unit){
     int tamano_recorrido = (int)sizeof(EBR)+leido2.part_size;
 
     while(1){
-        if(leido2.part_status='n' && leido2.part_next==-1){
+        if(leido2.part_status=='n' && leido2.part_next==-1){
             if(tamano_real<=(tamano_particion-sizeof(EBR)-tamano_recorrido)){
                 leido2.part_fit=fit;
                 strcpy(leido2.part_name,nombre);
@@ -722,243 +725,156 @@ void eliminar_particion(char *name,char *path,char tipo){
         return;
     }
 
-    if(tipo=='a'){
-        switch(name_exist(disco,leido,name)){
-            case 0:
-                printf("ERROR: No existe la particion.\n");
-                printf("----------ELIMINACION FALLIDA----------\n\n");
-                fclose(disco);
-                return;
-            case 1:
-                    if(leido.mbr_partition_1.part_status!='n')
-                        if(strcmp(leido.mbr_partition_1.part_name,name)==0){
-                            leido.mbr_partition_1.part_status='n';
-                        }
+    int extendida = 0;
+    char byte = '\0';
 
-                    if(leido.mbr_partition_2.part_status!='n')
-                        if(strcmp(leido.mbr_partition_2.part_name,name)==0){
-                            leido.mbr_partition_1.part_status='n';
-                        }
-
-                    if(leido.mbr_partition_3.part_status!='n')
-                        if(strcmp(leido.mbr_partition_3.part_name,name)==0){
-                            leido.mbr_partition_1.part_status='n';
-                        }
-
-                    if(leido.mbr_partition_4.part_status!='n')
-                        if(strcmp(leido.mbr_partition_4.part_name,name)==0){
-                            leido.mbr_partition_1.part_status='n';
-                        }
-                    fseek(disco,0,SEEK_SET);
-                    fwrite(&leido,sizeof(MBR),1,disco);
-                break;
-            case 2:
-                    int extendida =0;
-
-                    if(leido.mbr_partition_1.part_status!='n')
-                        if(mbr.mbr_partition_1.part_type=='e')
-                            extendida = 1;
-
-                    if(leido.mbr_partition_1.part_status!='n')
-                        if(mbr.mbr_partition_1.part_type=='e')
-                            extendida = 2;
-
-                    if(leido.mbr_partition_1.part_status!='n')
-                        if(mbr.mbr_partition_1.part_type=='e')
-                            extendida = 3;
-
-                    if(leido.mbr_partition_1.part_status!='n')
-                        if(mbr.mbr_partition_1.part_type=='e')
-                            extendida = 4;
-
-                    if(extendida!=0){
-                        EBR leidoe;
-
-                        switch(extendida){
-                        case 1:
-                            if(fseek(disco,leido.mbr_partition_1.part_start,SEEK_SET)!=0){
-                                printf("cagada.\n");
-                                break;
-                            };
-                            break;
-                        case 2:
-                            if(fseek(disco,leido.mbr_partition_2.part_start,SEEK_SET)!=0){
-                                printf("cagada.\n");
-                                break;
-                            };
-                            break;
-                        case 3:
-                            if(fseek(disco,leido.mbr_partition_3.part_start,SEEK_SET)!=0){
-                                printf("cagada.\n");
-                                break;
-                            };
-                            break;
-                        case 4:
-                            if(fseek(disco,leido.mbr_partition_4.part_start,SEEK_SET)!=0){
-                                printf("cagada.\n");
-                            };
-                            break;
-                        }
-
-                        if(fread(&leidoe,sizeof(EBR),1,disco)!=1){
-                            printf("ERROR:al cargar la data del disco\n");
-                            fclose(disco);
-                            return-1;
-                        }
-
-                        EBR anterior;
-                        anterior = leidoe;
-                        while(strcmp(leidoe.part_name,name)!=0 && leidoe.part_next!=-1){
-                             if(fseek(disco,leidoe.part_size,SEEK_CUR)!=0){
-                                printf("cagada.\n");
-                                break;
-                            };
-                            anterior=leidoe;
-                            if(fread(&leidoe,sizeof(EBR),1,disco)!=1){
-                                printf("cagada.\n");
-                                break;
-                            };
-                        }
-
-                        if(strcmp(leidoe.part_name,name)==0){
-                            anterior.part_next=leidoe.part_next;
-                            fseek(disco,-2*sizeof(EBR)-anterior.part_size,SEEK_CUR);
-                            fwrite(&anterior,sizeof(EBR),1,disco);
-                        }
+    switch(name_exist(disco,leido,name)){
+        case 0:
+            printf("ERROR: No existe la particion.\n");
+            printf("----------ELIMINACION FALLIDA----------\n\n");
+            fclose(disco);
+            return;
+        case 1:
+            if(tipo=='a'){
+                if(leido.mbr_partition_1.part_status!='n')
+                    if(strcmp(leido.mbr_partition_1.part_name,name)==0){
+                        leido.mbr_partition_1.part_status='n';
                     }
-                break;
-        }
-    }else if(tipo=='u'){
+                if(leido.mbr_partition_2.part_status!='n')
+                    if(strcmp(leido.mbr_partition_2.part_name,name)==0){
+                        leido.mbr_partition_1.part_status='n';
+                    }
+                if(leido.mbr_partition_3.part_status!='n')
+                    if(strcmp(leido.mbr_partition_3.part_name,name)==0){
+                        leido.mbr_partition_1.part_status='n';
+                    }
+                if(leido.mbr_partition_4.part_status!='n')
+                    if(strcmp(leido.mbr_partition_4.part_name,name)==0){
+                        leido.mbr_partition_1.part_status='n';
+                    }
+            }else if(tipo=='u'){
+                if(leido.mbr_partition_1.part_status!='n')
+                    if(strcmp(leido.mbr_partition_1.part_name,name)==0){
+                        leido.mbr_partition_1.part_status='n';
+                        fseek(disco,leido.mbr_partition_1.part_start,SEEK_SET);
+                        fwrite(&byte,sizeof(char),leido.mbr_partition_1.part_size,disco);
+                    }
+                if(leido.mbr_partition_2.part_status!='n')
+                    if(strcmp(leido.mbr_partition_2.part_name,name)==0){
+                        leido.mbr_partition_2.part_status='n';
+                        fseek(disco,leido.mbr_partition_2.part_start,SEEK_SET);
+                        fwrite(&byte,sizeof(char),leido.mbr_partition_2.part_size,disco);
+                    }
+                if(leido.mbr_partition_3.part_status!='n')
+                    if(strcmp(leido.mbr_partition_3.part_name,name)==0){
+                        leido.mbr_partition_3.part_status='n';
+                        fseek(disco,leido.mbr_partition_3.part_start,SEEK_SET);
+                        fwrite(&byte,sizeof(char),leido.mbr_partition_3.part_size,disco);
+                    }
+                if(leido.mbr_partition_4.part_status!='n')
+                    if(strcmp(leido.mbr_partition_4.part_name,name)==0){
+                        leido.mbr_partition_4.part_status='n';
+                        fseek(disco,leido.mbr_partition_4.part_start,SEEK_SET);
+                        fwrite(&byte,sizeof(char),leido.mbr_partition_4.part_size,disco);
+                    }
+            }
+            fseek(disco,0,SEEK_SET);
+            fwrite(&leido,sizeof(MBR),1,disco);
+            break;
+        case 2:
+                if(leido.mbr_partition_1.part_status!='n')
+                    if(leido.mbr_partition_1.part_type=='e')
+                        extendida = 1;
 
-            case 0:
-                printf("ERROR: No existe la particion.\n");
-                printf("----------ELIMINACION FALLIDA----------\n\n");
-                fclose(disco);
-                return;
-            case 1:
-                    if(leido.mbr_partition_1.part_status!='n')
-                        if(strcmp(leido.mbr_partition_1.part_name,name)==0){
-                            leido.mbr_partition_1.part_status='n';
-                            fseek(disco,leido.mbr_partition_1.part_start,SEEK_SET);
-                            char byte = '\0';
-                            fwrite(&byte,sizeof(char),leido.mbr_tamano,disco);
-                        }
+                if(leido.mbr_partition_2.part_status!='n')
+                    if(leido.mbr_partition_2.part_type=='e')
+                        extendida = 2;
 
-                    if(leido.mbr_partition_2.part_status!='n')
-                        if(strcmp(leido.mbr_partition_2.part_name,name)==0){
-                            leido.mbr_partition_2.part_status='n';
-                            fseek(disco,leido.mbr_partition_2.part_start,SEEK_SET);
-                            char byte = '\0';
-                            fwrite(&byte,sizeof(char),leido.mbr_tamano,disco);
-                        }
+                if(leido.mbr_partition_3.part_status!='n')
+                    if(leido.mbr_partition_3.part_type=='e')
+                        extendida = 3;
 
-                    if(leido.mbr_partition_3.part_status!='n')
-                        if(strcmp(leido.mbr_partition_3.part_name,name)==0){
-                            leido.mbr_partition_3.part_status='n';
-                            fseek(disco,leido.mbr_partition_3.part_start,SEEK_SET);
-                            char byte = '\0';
-                            fwrite(&byte,sizeof(char),leido.mbr_tamano,disco);
-                        }
-                    if(leido.mbr_partition_4.part_status!='n')
-                        if(strcmp(leido.mbr_partition_4.part_name,name)==0){
-                            leido.mbr_partition_4.part_status='n';
-                            fseek(disco,leido.mbr_partition_4.part_start,SEEK_SET);
-                            char byte = '\0';
-                            fwrite(&byte,sizeof(char),leido.mbr_tamano,disco);
-                        }
-                    fseek(disco,0,SEEK_SET);
-                    fwrite(&leido,sizeof(MBR),1,disco);
-                break;
-            case 2:
-                    int extendida =0;
+                if(leido.mbr_partition_4.part_status!='n')
+                    if(leido.mbr_partition_4.part_type=='e')
+                        extendida = 4;
 
-                    if(leido.mbr_partition_1.part_status!='n')
-                        if(mbr.mbr_partition_1.part_type=='e')
-                            extendida = 1;
+                if(extendida!=0){
 
-                    if(leido.mbr_partition_1.part_status!='n')
-                        if(mbr.mbr_partition_1.part_type=='e')
-                            extendida = 2;
-
-                    if(leido.mbr_partition_1.part_status!='n')
-                        if(mbr.mbr_partition_1.part_type=='e')
-                            extendida = 3;
-
-                    if(leido.mbr_partition_1.part_status!='n')
-                        if(mbr.mbr_partition_1.part_type=='e')
-                            extendida = 4;
-
-                    if(extendida!=0){
-                        EBR leidoe;
-
-                        switch(extendida){
-                        case 1:
-                            if(fseek(disco,leido.mbr_partition_1.part_start,SEEK_SET)!=0){
-                                printf("cagada.\n");
-                                break;
-                            };
+                    switch(extendida){
+                    case 1:
+                        if(fseek(disco,leido.mbr_partition_1.part_start,SEEK_SET)!=0){
+                            printf("cagada.\n");
                             break;
-                        case 2:
-                            if(fseek(disco,leido.mbr_partition_2.part_start,SEEK_SET)!=0){
-                                printf("cagada.\n");
-                                break;
-                            };
-                            break;
-                        case 3:
-                            if(fseek(disco,leido.mbr_partition_3.part_start,SEEK_SET)!=0){
-                                printf("cagada.\n");
-                                break;
-                            };
-                            break;
-                        case 4:
-                            if(fseek(disco,leido.mbr_partition_4.part_start,SEEK_SET)!=0){
-                                printf("cagada.\n");
-                            };
-                            break;
-                        }
-
-                        if(fread(&leidoe,sizeof(EBR),1,disco)!=1){
-                            printf("ERROR:al cargar la data del disco\n");
-                            fclose(disco);
-                            return-1;
-                        }
-                        EBR anterior;
-                        anterior=leidoe;
-                        while(leidoe.part_next!=-1){
-                            if(leidoe.part_status=='s' && strcmp(leidoe.part_name,name)==0 && leidoe.part_next!=-1){
-                                leidoe.part_status='n';
-                                fseek(disco,leidoe.part_start,SEEK_SET);
-                                char byte = '\0';
-                                fwrite(&byte,sizeof(char),leidoe.part_size,disco);
-                                break;
-                            }else if(leidoe.part_status=='s' && strcmp(leidoe.part_name,name)==0 && leidoe.part_next==-1){
-                                anterior.part_next=-1;
-                                fseek(disco,-(sizeof(EBR)+anterior.part_size),SEEK_CUR);
-                            }
-                            //printf("EBR:\n\tFit: %c\n\tNombre: %s\n\tNext: %i\n\tSize: %i\n\tStart: %i\n\tStatus: %c\n",leido.part_fit,leido.part_name,leido.part_next,leido.part_size,leido.part_start,leido.part_status);
-                            if(fseek(disco,leidoe.part_size,SEEK_CUR)!=0){
-                                printf("cagada.\n");
-                                break;
-                            };
-                            anterior = leidoe;
-                            if(fread(&leidoe,sizeof(EBR),1,disco)!=1){
-                                printf("cagada.\n");
-                                break;
-                            };
-                        }
-
-                        if(leidoe.part_status=='s' && strcmp(leido.part_name,name)==0)return 2;
-                        //printf("EBR:\n\tFit: %c\n\tNombre: %s\n\tNext: %i\n\tSize: %i\n\tStart: %i\n\tStatus: %c\n",leido2.part_fit,leido2.part_name,leido2.part_next,leido2.part_size,leido2.part_start,leido2.part_status);
-                        if(fseek(disco,-sizeof(EBR),SEEK_CUR)!=0){
-                                printf("cagada.\n");
-                                break;
                         };
-                        fwrite(&leidoe,sizeof(EBR),1,disco);
-                        fclose("-----------ELIMINACION EXITOSA-----------\n\n");
+                        break;
+                    case 2:
+                        if(fseek(disco,leido.mbr_partition_2.part_start,SEEK_SET)!=0){
+                            printf("cagada.\n");
+                            break;
+                        };
+                        break;
+                    case 3:
+                        if(fseek(disco,leido.mbr_partition_3.part_start,SEEK_SET)!=0){
+                            printf("cagada.\n");
+                            break;
+                        };
+                        break;
+                    case 4:
+                        if(fseek(disco,leido.mbr_partition_4.part_start,SEEK_SET)!=0){
+                            printf("cagada.\n");
+                        };
+                        break;
+                    }
+
+                    EBR leidoe;
+                    EBR anterior;
+
+                    if(fread(&leidoe,sizeof(EBR),1,disco)!=1){
+                        printf("ERROR:al cargar la data del disco\n");
+                        fclose(disco);
                         return;
                     }
-                break;
-        }
+
+                    anterior = leidoe;
+                    while(strcmp(leidoe.part_name,name)!=0 && leidoe.part_next!=-1){
+                         if(fseek(disco,leidoe.part_size,SEEK_CUR)!=0){
+                            printf("cagada.\n");
+                            break;
+                        };
+                        anterior=leidoe;
+                        if(fread(&leidoe,sizeof(EBR),1,disco)!=1){
+                            printf("cagada.\n");
+                            break;
+                        };
+                    }
+
+                    if(strcmp(leidoe.part_name,name)==0){
+                        if(tipo=='a'){
+                            if(strcmp(anterior.part_name,leidoe.part_name)==0){
+                                leidoe.part_size=0;
+                                fseek(disco,-sizeof(EBR),SEEK_CUR);
+                                fwrite(&leido,sizeof(EBR),1,disco);
+                            }else{
+                                anterior.part_next=leidoe.part_next;
+                                fseek(disco,-2*sizeof(EBR)-anterior.part_size,SEEK_CUR);
+                                fwrite(&anterior,sizeof(EBR),1,disco);
+                            }
+                        }else if(tipo=='u'){
+                            if(strcmp(anterior.part_name,leidoe.part_name)==0){
+                                leidoe.part_size=0;
+                                fwrite(&byte,sizeof(char),leidoe.part_size,disco);
+                                fseek(disco,-sizeof(EBR),SEEK_CUR);
+                                fwrite(&leido,sizeof(EBR),1,disco);
+                            }else{
+                                anterior.part_next=leidoe.part_next;
+                                fwrite(&byte,sizeof(char),leidoe.part_size,disco);
+                                fseek(disco,-2*sizeof(EBR)-anterior.part_size,SEEK_CUR);
+                                fwrite(&anterior,sizeof(EBR),1,disco);
+                            }
+                        }
+                    }
+                }
+            break;
     }
     fclose(disco);
     printf("-------------ELIMINACION EXITOSA-----------\n\n");
@@ -968,6 +884,106 @@ void modificar_tamano_particion(char *name, char*path,char unit,int add){
     printf("-------------MODIFICAR PARTICION-----------\n");
     printf("Nombre: %s\nPath: %s\nTamano a Modificar: %i\nUnidades: %c\n",name,path,add,unit);
     printf("-------------ELIMINACION EXITOSA-----------\n\n");
+}
+
+int path_e(char *path);
+int name_e(int j,char *name);
+
+int mount_exit(char *name);
+char *path_mount(char *name);
+
+char *path_mount(char *name){
+    for(int i=0;i<25;i++){
+        for(int j=0;j<100;j++){
+            if(strcmp(monstajes[i].lista[j].nombre,name)==0){
+                char *patht = malloc(sizeof(char)*strlen(monstajes->path));
+                strcpy(patht,monstajes->path);
+                return patht;
+            }
+        }
+    }
+    return NULL;
+}
+
+int mount_exit(char *name){
+
+    for(int i=0;i<25;i++){
+        for(int j=0;j<100;j++){
+            if(strcmp(monstajes[i].lista[j].nombre,name)==0){
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+void mount_c(char *path,char *name){
+
+    struct stat st = {0};
+    if(stat(path,&st)==-1){
+        printf("ERROR: el archivo especificado no existe.\n");
+        printf("-----------OPERACION FALLIDA-----------\n\n");
+        return;
+    }
+
+    int a = path_e(path);
+    char abecedario[26] = "abcdefghijklmnopqrstuvwxyz";
+    if(a!=-1){
+        if(name_e(a,name)!=-1){
+            printf("ERROR: el nombre ya se encuentra utilizado.\n");
+            return;
+        }else{
+            for(int i=0;i<100;i++){
+                if(strlen(monstajes[a].lista[i].nombre)==0){
+                    char buffer[20];
+                    sprintf(buffer,"%d",i+1);
+                    printf("%s\n",buffer);
+                    strcpy(monstajes[a].path,path);
+                    monstajes[a].lista[i].letra = abecedario[a];
+                    monstajes[a].lista[i].numero=i;
+                    strcpy(monstajes[a].lista[i].nombre,name);
+                    strcat(monstajes[a].lista[i].id,"vd");
+                    monstajes[a].lista[i].id[2]=abecedario[a];
+                    strcat(monstajes[a].lista[i].id,buffer);
+                    printf("Particion Montada como %s\n",monstajes[a].lista[i].id);
+                    return;
+                }
+            }
+        }
+    }else{
+        for(int i=0;i<25;i++){
+            if(strlen(monstajes[i].path)==0){
+                strcpy(monstajes[i].path,path);
+                monstajes[i].lista[0].letra = abecedario[i];
+                monstajes[i].lista[0].numero=1;
+                strcpy(monstajes[i].lista[0].nombre,name);
+                strcat(monstajes[i].lista[0].id,"vd");
+                monstajes[i].lista[0].id[2]=abecedario[i];
+                monstajes[i].lista[0].id[3]=monstajes[i].lista[0].numero+'0';
+                printf("Particion Montada como %s\n",monstajes[i].lista[0].id);
+                return;
+            }
+        }
+    }
+    printf("Algo ocrurrio mal.\n");
+}
+
+int name_e(int j,char *name){
+    for(int i=0;i<100;i++){
+        if(strcmp(monstajes[j].lista[i].nombre,name)==0){
+            return i;
+        }
+    }
+    return -1;
+}
+
+int path_e(char *path){
+    for(int i=0;i<25;i++){
+        if(strcmp(monstajes[i].path,path)==0){
+            return i;
+        }
+    }
+    return -1;
 }
 
 int name_exist(FILE *disco,MBR mbr,char *name){
@@ -1189,7 +1205,7 @@ int crear_directorios(char *path){
 
     struct stat st = {0};
 
-    while(direc){
+    while(direc || strstr(direc,".dsk")!=0){
         if(stat(dirreccion,&st)==-1)
             mkdir(dirreccion,0700);
         direc = strtok(NULL,"/");
@@ -1221,4 +1237,268 @@ int extendida_exist(MBR mbr){
             posicion = 4;
 
     return posicion;
+}
+
+void disk_r(char *id,char *path){
+
+    if(crear_directorios(path)==0){
+        printf("ERROR: el valor ingresado para path es erroneo.\n");
+        printf("**********GENERACION FALLIDA***********\n\n");
+        return;
+    }
+
+    FILE *reporte;
+    FILE *disco;
+
+    char paux[200];
+
+    strcpy(paux,path);
+    strcat(paux,".dot");
+
+    if(!mount_exit(id)){
+        printf("ERROR: no hay montaje con ese nombre.\n");
+        return;
+    }
+
+    char *path_m = path_mount(id);
+
+    reporte = fopen(paux,"w");
+
+    if(!reporte){
+        printf("ERROR: el Reporte no ha podido cargarse.\n");
+        printf("**********GENERACION FALLIDA***********\n\n");
+        return;
+    }
+
+    disco = fopen(path_m,"rb");
+
+    if(!disco){
+        printf("ERROR: el Disco no ha podido cargarse.\n");
+        printf("**********GENERACION FALLIDA***********\n\n");
+        return;
+    }
+
+    MBR leido;
+
+    fread(&leido,sizeof(MBR),1,disco);
+
+    fprintf(reporte,"digraph structs {\n\tnode [shape=plaintext]\n\tstruct3 [label=<<TABLE BORDER=\"1\" CELLBORDER=\"1\" CELLSPACING=\"1\" CELLPADDING=\"3\" COLOR=\"BLUE\"><TR><TD ROWSPAN=\"2\">%s</TD>","MBR");
+    fprintf(reporte,"<TD ROWSPAN=\"2\">%s</TD>","PRIMARIA");
+    fprintf(reporte,"<TD COLSPAN=\"5\">%s</TD>","extendida");
+    fprintf(reporte,"<TD ROWSPAN=\"2\">%s</TD>","PRIMARIA");
+    fprintf(reporte,"<TD ROWSPAN=\"2\">%s</TD></TR>","PRIMARIA");
+
+    fprintf(reporte,"</TABLE>>];}");
+
+    fclose(reporte);
+    fclose(disco);
+
+    char comando[200];
+
+    strcat(comando,"dot -Tjpg -o ");
+    strcat(comando,path);
+    strcat(comando," ");
+    strcat(comando,paux);
+
+    system(comando);
+}
+
+void mbr_r(char *id,char *path){
+    if(crear_directorios(path)==0){
+        printf("ERROR: el valor ingresado para path es erroneo.\n");
+        printf("**********GENERACION FALLIDA***********\n\n");
+        return;
+    }
+
+    FILE *reporte;
+    FILE *disco;
+
+    char paux[200];
+
+    strcpy(paux,path);
+    strcat(paux,".dot");
+
+    if(!mount_exit(id)){
+        printf("ERROR: no hay montaje con ese nombre.\n");
+        return;
+    }
+
+    char *path_m = path_mount(id);
+
+    reporte = fopen(paux,"w");
+
+    if(!reporte){
+        printf("ERROR: el Reporte no ha podido cargarse.\n");
+        printf("**********GENERACION FALLIDA***********\n\n");
+        return;
+    }
+
+    disco = fopen(path_m,"rb");
+
+    if(!disco){
+        printf("ERROR: el Disco no ha podido cargarse.\n");
+        printf("**********GENERACION FALLIDA***********\n\n");
+        return;
+    }
+
+    MBR leido;
+
+    fread(&leido,sizeof(MBR),1,disco);
+
+    fprintf(reporte,"digraph structs {\n\tnode [shape=plaintext]\n\t%s [label=<<TABLE BORDER=\"1\" CELLBORDER=\"1\" CELLSPACING=\"1\" CELLPADDING=\"3\" COLOR=\"BLUE\"><TR><TD COLSPAN=\"2\">MBR</TD></TR><TR><TD>%s</TD><TD>%s</TD></TR>","MBR","Nombre","Valor");
+
+    int aux=0;
+    char auxc[20];
+
+    aux = leido.mbr_tamano;
+    sprintf(auxc, "%d", aux);
+    fprintf(reporte,"<TR><TD>%s</TD><TD>%s</TD></TR>","mbr_tamano",auxc);
+    fprintf(reporte,"<TR><TD>%s</TD><TD>%s</TD></TR>","mbr_fecha_creacion",ctime(&leido.mbr_fecha_creacion));
+
+    aux = leido.mbr_disk_signature;
+    sprintf(auxc, "%d", aux);
+    fprintf(reporte,"<TR><TD>%s</TD><TD>%s</TD></TR>","mbr_disk_signature",auxc);
+
+    int extendida =0;
+
+    if(leido.mbr_partition_1.part_status=='s'){
+        fprintf(reporte,"<TR><TD>%s</TD><TD>%c</TD></TR>","Part_status_1",leido.mbr_partition_1.part_status);
+        fprintf(reporte,"<TR><TD>%s</TD><TD>%c</TD></TR>","part_type_1",leido.mbr_partition_1.part_type);
+        if(leido.mbr_partition_1.part_type=='e' || leido.mbr_partition_1.part_type=='E'){
+            extendida =1;
+        }
+        fprintf(reporte,"<TR><TD>%s</TD><TD>%c</TD></TR>","part_fit_1",leido.mbr_partition_1.part_fit);
+
+        aux = leido.mbr_partition_1.part_start;
+        sprintf(auxc, "%d", aux);
+        fprintf(reporte,"<TR><TD>%s</TD><TD>%s</TD></TR>","part_start_1",auxc);
+
+        aux = leido.mbr_partition_1.part_size;
+        sprintf(auxc, "%d", aux);
+        fprintf(reporte,"<TR><TD>%s</TD><TD>%s</TD></TR>","part_size_1",auxc);
+
+        fprintf(reporte,"<TR><TD>%s</TD><TD>%s</TD></TR>","part_name_1",leido.mbr_partition_1.part_name);
+    }
+
+    if(leido.mbr_partition_2.part_status=='s'){
+        fprintf(reporte,"<TR><TD>%s</TD><TD>%c</TD></TR>","Part_status_2",leido.mbr_partition_2.part_status);
+        fprintf(reporte,"<TR><TD>%s</TD><TD>%c</TD></TR>","part_type_2",leido.mbr_partition_2.part_type);
+        fprintf(reporte,"<TR><TD>%s</TD><TD>%c</TD></TR>","part_fit_2",leido.mbr_partition_2.part_fit);
+        if(leido.mbr_partition_2.part_type=='e' || leido.mbr_partition_2.part_type=='E'){
+            extendida =2;
+        }
+        aux = leido.mbr_partition_2.part_start;
+        sprintf(auxc, "%d", aux);
+        fprintf(reporte,"<TR><TD>%s</TD><TD>%s</TD></TR>","part_start_2",auxc);
+
+        aux = leido.mbr_partition_2.part_size;
+        sprintf(auxc, "%d", aux);
+        fprintf(reporte,"<TR><TD>%s</TD><TD>%s</TD></TR>","part_size_2",auxc);
+
+        fprintf(reporte,"<TR><TD>%s</TD><TD>%s</TD></TR>","part_name_2",leido.mbr_partition_2.part_name);
+    }
+    if(leido.mbr_partition_3.part_status=='s'){
+        fprintf(reporte,"<TR><TD>%s</TD><TD>%c</TD></TR>","Part_status_3",leido.mbr_partition_3.part_status);
+        fprintf(reporte,"<TR><TD>%s</TD><TD>%c</TD></TR>","part_type_3",leido.mbr_partition_3.part_type);
+        fprintf(reporte,"<TR><TD>%s</TD><TD>%c</TD></TR>","part_fit_3",leido.mbr_partition_3.part_fit);
+        if(leido.mbr_partition_3.part_type=='e' || leido.mbr_partition_3.part_type=='E'){
+            extendida =3;
+        }
+        aux = leido.mbr_partition_3.part_start;
+        sprintf(auxc, "%d", aux);
+        fprintf(reporte,"<TR><TD>%s</TD><TD>%s</TD></TR>","part_start_3",auxc);
+
+        aux = leido.mbr_partition_3.part_size;
+        sprintf(auxc, "%d", aux);
+        fprintf(reporte,"<TR><TD>%s</TD><TD>%s</TD></TR>","part_size_3",auxc);
+
+        fprintf(reporte,"<TR><TD>%s</TD><TD>%s</TD></TR>","part_name_3",leido.mbr_partition_3.part_name);
+    }
+    if(leido.mbr_partition_4.part_status=='s'){
+        fprintf(reporte,"<TR><TD>%s</TD><TD>%c</TD></TR>","Part_status_4",leido.mbr_partition_4.part_status);
+        fprintf(reporte,"<TR><TD>%s</TD><TD>%c</TD></TR>","part_type_4",leido.mbr_partition_4.part_type);
+        fprintf(reporte,"<TR><TD>%s</TD><TD>%c</TD></TR>","part_fit_4",leido.mbr_partition_4.part_fit);
+        if(leido.mbr_partition_4.part_type=='e' || leido.mbr_partition_4.part_type=='E'){
+            extendida =4;
+        }
+        aux = leido.mbr_partition_4.part_start;
+        sprintf(auxc, "%d", aux);
+        fprintf(reporte,"<TR><TD>%s</TD><TD>%s</TD></TR>","part_start_4",auxc);
+
+        aux = leido.mbr_partition_4.part_size;
+        sprintf(auxc, "%d", aux);
+        fprintf(reporte,"<TR><TD>%s</TD><TD>%s</TD></TR>","part_size_4",auxc);
+
+        fprintf(reporte,"<TR><TD>%s</TD><TD>%s</TD></TR>","part_name_4",leido.mbr_partition_4.part_name);
+    }
+
+
+    fprintf(reporte,"</TABLE>>];");
+
+    if(extendida!=0){
+        EBR ebr;
+        switch(extendida){
+            case 1:
+                fseek(disco,leido.mbr_partition_1.part_start,SEEK_SET);
+                break;
+            case 2:
+                fseek(disco,leido.mbr_partition_1.part_start,SEEK_SET);
+                break;
+            case 3:
+                fseek(disco,leido.mbr_partition_1.part_start,SEEK_SET);
+                break;
+            case 4:
+                fseek(disco,leido.mbr_partition_1.part_start,SEEK_SET);
+                break;
+        }
+        fread(&ebr,sizeof(EBR),1,disco);
+        int i = 1;
+        while(ebr.part_next!=-1){
+        fprintf(reporte,"EBR%i [label=<<TABLE BORDER=\"1\" CELLBORDER=\"1\" CELLSPACING=\"1\" CELLPADDING=\"3\" COLOR=\"BLUE\"><TR><TD>%s</TD><TD>%s</TD></TR>",i,"Nombre","Valor");
+
+        fprintf(reporte,"<TR><TD>%s_%i</TD><TD>%c</TD></TR>","part_status",i,ebr.part_status);
+        fprintf(reporte,"<TR><TD>%s_%i</TD><TD>%c</TD></TR>","part_fit",i,ebr.part_fit);
+        fprintf(reporte,"<TR><TD>%s_%i</TD><TD>%i</TD></TR>","part_start",i,ebr.part_start);
+        fprintf(reporte,"<TR><TD>%s_%i</TD><TD>%i</TD></TR>","part_size",i,ebr.part_size);
+        fprintf(reporte,"<TR><TD>%s_%i</TD><TD>%i</TD></TR>","part_next",i,ebr.part_next);
+        fprintf(reporte,"<TR><TD>%s_%i</TD><TD>%s</TD></TR>","part_name",i,ebr.part_name);
+
+        fprintf(reporte,"</TABLE>>];");
+        if(fseek(disco,ebr.part_size,SEEK_CUR)!=0){
+            printf("cagada.\n");
+            break;
+        };
+        if(fread(&ebr,sizeof(EBR),1,disco)!=1){
+            printf("cagada.\n");
+            break;
+        };
+        i++;
+    }
+
+        fprintf(reporte,"EBR%i [label=<<TABLE BORDER=\"1\" CELLBORDER=\"1\" CELLSPACING=\"1\" CELLPADDING=\"3\" COLOR=\"BLUE\"><TR><TD COLSPAN=\"2\">EBR%i<TD></TR><TR><TD>%s</TD><TD>%s</TD></TR>",i,i,"Nombre","Valor");
+
+        fprintf(reporte,"<TR><TD>%s_%i</TD><TD>%c</TD></TR>","part_status",i,ebr.part_status);
+        fprintf(reporte,"<TR><TD>%s_%i</TD><TD>%c</TD></TR>","part_fit",i,ebr.part_fit);
+        fprintf(reporte,"<TR><TD>%s_%i</TD><TD>%i</TD></TR>","part_start",i,ebr.part_start);
+        fprintf(reporte,"<TR><TD>%s_%i</TD><TD>%i</TD></TR>","part_size",i,ebr.part_size);
+        fprintf(reporte,"<TR><TD>%s_%i</TD><TD>%i</TD></TR>","part_next",i,ebr.part_next);
+        fprintf(reporte,"<TR><TD>%s_%i</TD><TD>%s</TD></TR>","part_name",i,ebr.part_name);
+
+        fprintf(reporte,"</TABLE>>];");
+
+    }
+
+    fprintf(reporte,"}");
+
+    fclose(reporte);
+    fclose(disco);
+
+    char comando[200];
+
+    strcat(comando,"dot -Tjpg -o ");
+    strcat(comando,path);
+    strcat(comando," ");
+    strcat(comando,paux);
+
+    system(comando);
 }

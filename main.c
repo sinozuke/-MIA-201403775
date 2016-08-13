@@ -26,16 +26,16 @@ int main()
                         fdisk(token);
                         break;
                     case 4:
-                        printf("Comando Mount invocado\n");
+                        mount(token);
                         break;
                     case 5:
                         printf("Comando UMount invocado\n");
                         break;
                     case 6:
-                        printf("Comando Rep invocado\n");
+                        rep(token);
                         break;
                     case 7:
-                        printf("Comando Exec invocado\n");
+                        exec(token);
                         break;
                     case 8:
                         printf("----------Saliendo del sistema----------\n");
@@ -48,8 +48,9 @@ int main()
                     token = strtok(NULL, " ");
         }
     }
-
-/*    printf("%i\n",(int)sizeof(MBR));
+/*
+    printf("%i\n",(int)strlen(cadena));
+    printf("%i\n",(int)sizeof(MBR));
     printf("%i\n",(int)sizeof(particion));
     printf("%i\n",(int)sizeof(EBR));
 */

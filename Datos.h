@@ -70,5 +70,17 @@ typedef struct{
     int b_inodo;
 } content;
 
+typedef struct{
+    int numero;
+    char letra;
+    char id[6];
+    char nombre[50];
+}ids;
+
+typedef struct{
+    ids lista[100];
+    char path[100];
+}Montaje;
+
 
 #endif // DATOS_H_INCLUDED

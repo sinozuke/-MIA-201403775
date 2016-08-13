@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <time.h>
 #include "comandos.h"
 #include "funciones.h"
 
@@ -15,6 +19,7 @@ int pasa(char *token,int opcino1,int opcion2);
 char BF_FF_WF(char *valor);
 char Fast_Full(char *valor);
 int isnumero(char *token);
+int name_rep(char *token);
 
 void mkdisk(char *token)
 {
@@ -308,9 +313,7 @@ void fdisk(char *token)
                         strcat(valor,token);
                     }
                     valor_r = valor_real(longitud_real(valor),valor);
-                    printf("%s\n",valor_r);
                     valor_r = ncomillas(valor_r);
-                    printf("%s\n",valor_r);
                     strcpy(path,valor_r);
                     printf("%s\n",path);
                 }else{
@@ -551,7 +554,94 @@ void fdisk(char *token)
 
 void mount(char *token)
 {
+    int p_path=0;
+    int p_name=0;
 
+    char path[200];
+    char *name;
+
+    char valor[500];
+    char *valor_r;
+    int i;
+
+    token = strtok(NULL, " ");
+    while (token)
+    {
+        switch(parametros(token)){
+            case 3:
+                if(!p_path){
+                    if(!pasa(token,1,0)){
+                        printf("ERROR: no se presenta el separador '::' entre el parametro 'path' y el valor.\n");
+                        return;
+                    }
+                    for(i=0;token[i+7]!='\0';i++)
+                        valor[i]=token[i+7];
+                    valor[i]='\0';
+                    while(!pasa(valor,0,1)){
+                        token = strtok(NULL," ");
+                        if(!token){
+                            printf("ERROR: se ha llegado al final de lectura sin terminar el valor con la doble comillas.\n");
+                            return;
+                        }
+                        strcat(valor," ");
+                        strcat(valor,token);
+                    }
+                    valor_r = valor_real(longitud_real(valor),valor);
+
+                    valor_r = ncomillas(valor_r);
+
+                    strcpy(path,valor_r);
+                    printf("%s\n",path);
+                }else{
+                    printf("ERROR: el parametro 'path' esta declarado mas de una vez.\n");
+                    return;
+                }
+                p_path=1;
+                break;
+            case 4:
+                if(!p_name){
+                    if(!pasa(token,1,0)){
+                        printf("ERROR: no se presenta el separador '::' entre el parametro 'name' y el valor.\n");
+                        return;
+                    }
+                    for(i=0;token[i+7]!='\0';i++)
+                        valor[i]=token[i+7];
+                    valor[i]='\0';
+                    while(!pasa(valor,0,1)){
+                        token = strtok(NULL," ");
+                        if(!token){
+                            printf("ERROR: se ha llegado al final de lectura sin terminar el valor con la doble comillas.\n");
+                            return;
+                        }
+                        strcat(valor," ");
+                        strcat(valor,token);
+                    }
+                    valor_r = valor_real(longitud_real(valor),valor);
+                    valor_r = ncomillas(valor_r);
+                    name = malloc(sizeof(char)*strlen(valor_r));
+                    strcpy(name,valor_r);
+                }else{
+                    printf("ERROR: el parametro 'name' esta declarado mas de una vez.\n");
+                    return;
+                }
+                p_name =1;
+                break;
+                default:
+                printf("Parametro \"%s\" NO reconocido.\n",token);
+                return;
+        }
+        token = strtok(NULL, " ");
+    }
+    if(p_path*p_name){
+        mount_c(path,name);
+    }else{
+        if(!p_path){
+            printf("ERROR: falta el parametro 'path'.\n");
+        }
+        if(!p_name){
+            printf("ERROR: falta el parametro 'name'.\n");
+        }
+    }
 }
 
 void umount(char *token)
@@ -561,12 +651,335 @@ void umount(char *token)
 
 
 void rep(char *token){
+    int p_name=0;
+    int p_id=0;
+    int p_ruta=0;
+    int p_path=0;
 
+    char path[200];
+    char ruta[200];
+    char id[200];
+    int name=0;
+
+    char valor[500];
+    char *valor_r;
+    int i;
+
+    token = strtok(NULL, " ");
+    while (token)
+    {
+        switch(parametros(token)){
+            case 3:
+                if(!p_path){
+                    if(!pasa(token,1,0)){
+                        printf("ERROR: no se presenta el separador '::' entre el parametro 'path' y el valor.\n");
+                        return;
+                    }
+                    for(i=0;token[i+7]!='\0';i++)
+                        valor[i]=token[i+7];
+                    valor[i]='\0';
+                    while(!pasa(valor,0,1)){
+                        token = strtok(NULL," ");
+                        if(!token){
+                            printf("ERROR: se ha llegado al final de lectura sin terminar el valor con la doble comillas.\n");
+                            return;
+                        }
+                        strcat(valor," ");
+                        strcat(valor,token);
+                    }
+                    valor_r = valor_real(longitud_real(valor),valor);
+
+                    valor_r = ncomillas(valor_r);
+
+                    strcpy(path,valor_r);
+                    printf("%s\n",path);
+                }else{
+                    printf("ERROR: el parametro 'path' esta declarado mas de una vez.\n");
+                    return;
+                }
+                p_path=1;
+                break;
+            case 4:
+                if(!p_name){
+                    if(!pasa(token,1,0)){
+                        printf("ERROR: no se presenta el separador '::' entre el parametro 'name' y el valor.\n");
+                        return;
+                    }
+                    for(i=0;token[i+7]!='\0';i++)
+                        valor[i]=token[i+7];
+                    valor[i]='\0';
+                    while(!pasa(valor,0,1)){
+                        token = strtok(NULL," ");
+                        if(!token){
+                            printf("ERROR: se ha llegado al final de lectura sin terminar el valor con la doble comillas.\n");
+                            return;
+                        }
+                        strcat(valor," ");
+                        strcat(valor,token);
+                    }
+                    valor_r = valor_real(longitud_real(valor),valor);
+                    valor_r = ncomillas(valor_r);
+                    name=name_rep(valor_r);
+                    if(name==0){
+                        printf("ERROR: el valor para el parametro name no es valido.\n");
+                        return;
+                    }
+                }else{
+                    printf("ERROR: el parametro 'name' esta declarado mas de una vez.\n");
+                    return;
+                }
+                p_name =1;
+                break;
+                case 9:
+                    if(!p_id){
+                        if(!pasa(token,1,0)){
+                            printf("ERROR: no se presenta el separador '::' entre el parametro 'name' y el valor.\n");
+                            return;
+                        }
+                        for(i=0;token[i+5]!='\0';i++)
+                            valor[i]=token[i+5];
+                        valor[i]='\0';
+                        while(!pasa(valor,0,1)){
+                            token = strtok(NULL," ");
+                            if(!token){
+                                printf("ERROR: se ha llegado al final de lectura sin terminar el valor con la doble comillas.\n");
+                                return;
+                            }
+                            strcat(valor," ");
+                            strcat(valor,token);
+                        }
+                        valor_r = valor_real(longitud_real(valor),valor);
+                        valor_r = ncomillas(valor_r);
+                        strcpy(id,valor_r);
+                    }else{
+                        printf("ERROR: el parametro 'id' esta declarado mas de una vez.\n");
+                        return;
+                    }
+                    p_id =1;
+                    break;
+                case 10:
+                    if(!p_ruta){
+                        if(!pasa(token,1,0)){
+                            printf("ERROR: no se presenta el separador '::' entre el parametro 'name' y el valor.\n");
+                            return;
+                        }
+                        for(i=0;token[i+7]!='\0';i++)
+                            valor[i]=token[i+7];
+                        valor[i]='\0';
+                        while(!pasa(valor,0,1)){
+                            token = strtok(NULL," ");
+                            if(!token){
+                                printf("ERROR: se ha llegado al final de lectura sin terminar el valor con la doble comillas.\n");
+                                return;
+                            }
+                            strcat(valor," ");
+                            strcat(valor,token);
+                        }
+                        valor_r = valor_real(longitud_real(valor),valor);
+                        valor_r = ncomillas(valor_r);
+                        strcpy(ruta,valor_r);
+                    }else{
+                        printf("ERROR: el parametro 'ruta' esta declarado mas de una vez.\n");
+                        return;
+                    }
+                    p_ruta =1;
+                    break;
+                default:
+                    printf("Parametro \"%s\" NO reconocido.\n",token);
+                return;
+        }
+        token = strtok(NULL, " ");
+    }
+    if(p_path*p_name*p_id){
+        switch(name){
+            case 1:
+                mbr_r(id,path);
+                break;
+            case 2:
+                disk_r(id,path);
+                break;
+            case 3:
+                printf("-- Disculpa, reporte aun no valido --\n");
+                break;
+            case 4:
+                printf("-- Disculpa, reporte aun no valido --\n");
+                break;
+            case 5:
+                printf("-- Disculpa, reporte aun no valido --\n");
+                break;
+            case 6:
+                printf("-- Disculpa, reporte aun no valido --\n");
+                break;
+            case 7:
+                printf("-- Disculpa, reporte aun no valido --\n");
+                break;
+            case 8:
+                printf("-- Disculpa, reporte aun no valido --\n");
+                break;
+            case 9:
+                printf("-- Disculpa, reporte aun no valido --\n");
+                break;
+            case 10:
+                printf("-- Disculpa, reporte aun no valido --\n");
+                break;
+            case 11:
+                printf("-- Disculpa, reporte aun no valido --\n");
+                break;
+            case 12:
+                printf("-- Disculpa, reporte aun no valido --\n");
+                break;
+        }
+    }else{
+        if(!p_path)
+            printf("ERROR: falta el parametro path.\n");
+        if(!p_name)
+            printf("ERROR: falta el parametro name.\n");
+        if(!p_id)
+            printf("ERROR: falta el parametro id.\n");
+        return;
+    }
 
 }
 
 void exec(char *token){
+    int p_path=0;
 
+    char path[200];
+
+    char valor[500];
+    char *valor_r;
+    int i;
+
+    token = strtok(NULL, " ");
+    while (token)
+    {
+        switch(parametros(token)){
+            case 3:
+                if(!p_path){
+                    if(!pasa(token,1,0)){
+                        printf("ERROR: no se presenta el separador '::' entre el parametro 'path' y el valor.\n");
+                        return;
+                    }
+                    for(i=0;token[i+7]!='\0';i++)
+                        valor[i]=token[i+7];
+                    valor[i]='\0';
+                    while(!pasa(valor,0,1)){
+                        token = strtok(NULL," ");
+                        if(!token){
+                            printf("ERROR: se ha llegado al final de lectura sin terminar el valor con la doble comillas.\n");
+                            return;
+                        }
+                        strcat(valor," ");
+                        strcat(valor,token);
+                    }
+                    valor_r = valor_real(longitud_real(valor),valor);
+
+                    valor_r = ncomillas(valor_r);
+
+                    strcpy(path,valor_r);
+                    printf("%s\n",path);
+                }else{
+                    printf("ERROR: el parametro 'path' esta declarado mas de una vez.\n");
+                    return;
+                }
+                p_path=1;
+                break;
+                default:
+                printf("Parametro \"%s\" NO reconocido.\n",token);
+                return;
+        }
+        token = strtok(NULL, " ");
+    }
+    if(p_path){
+            struct stat st = {0};
+            printf("%s\n",path);
+            if(stat(path,&st)==-1){
+                printf("ERROR: el archivo especificado no existe.\n");
+                printf("-------------CARGA FALLIDA--------------\n\n");
+                return;
+            }
+
+            FILE *execa;
+
+            execa = fopen(path,"r");
+
+            if(!execa){
+                printf("ERROR: el Disco no ha podido Abrirse.\n");
+                printf("-------------CARGA FALLIDA--------------\n\n");
+                return;
+            }
+
+            long size;
+            fseek(execa,0,SEEK_END);
+            size = ftell(execa);
+            fseek(execa,0,SEEK_SET);
+            char contenido [size];
+            fread(contenido,1,size,execa);
+            fclose(execa);
+
+            int ban=0;
+
+            for(int i=0;contenido[i];i++){
+                if(contenido[i]=='\\'){
+                    ban = 1;
+                    contenido[i]=' ';
+                }else{
+                    if(ban){
+                        if(contenido[i]=='\n'){
+                            ban=0;
+                            contenido[i]=' ';
+                        }
+                    }else{
+                        contenido[i]=contenido[i];
+                    }
+                }
+            }
+
+            printf("%s\n",contenido);
+/*
+            char *tokenp;
+            char *tokenp2;
+            char comando[100];
+            tokenp = strtok(cont,"\n");
+            strcpy(comando,tokenp);
+            tokenp2 = strcpy(comando," ");
+            while(tokenp){
+                while (tokenp2) {
+                    switch(opcion(token)){
+                        case -1:
+                            printf("%s\n",tokenp2);
+                            break;
+                        case 1:
+                            mkdisk(tokenp2);
+                            break;
+                        case 2:
+                            rmdisk(tokenp2);
+                            break;
+                        case 3:
+                            fdisk(tokenp2);
+                            break;
+                        case 4:
+                            mount(tokenp2);
+                            break;
+                        case 5:
+                            printf("Comando UMount invocado\n");
+                            break;
+                        case 6:
+                            rep(tokenp2);
+                            break;
+                        default:
+                            printf("ERROR: el comando \"%s\" no reconocido\n",tokenp2);
+                            break;
+                    }
+                    while (token)
+                        tokenp2 = strtok(NULL, " ");
+                }
+                tokenp = strtok(NULL,"\n");
+                strcpy(comando,tokenp);
+            }
+    }else{
+        printf("ERROR: falta el parametro 'path'.\n");
+    */}
 }
 
 
@@ -632,6 +1045,67 @@ int k_m(char *valor){
     return 0;
 }
 
+int name_rep(char *token){
+
+    char cadena[100];
+
+    strcpy(cadena,token);
+
+    for(int i = 0; cadena[i]; i++)
+        cadena[i] = tolower(cadena[i]); //<--convierte a minusculas
+
+    char *pos = strstr(cadena,"mbr");
+    if(pos){
+        return 1;
+    }
+    pos = strstr(cadena,"disk");
+    if(pos){
+        return 2;
+    }
+    pos = strstr(cadena,"inode");
+    if(pos){
+        return 3;
+    }
+    pos = strstr(cadena,"journaling");
+    if(pos){
+        return 4;
+    }
+    pos = strstr(cadena,"block");
+    if(pos){
+        return 5;
+    }
+    pos = strstr(cadena,"bm_inode");
+    if(pos){
+        return 6;
+    }
+    pos = strstr(cadena,"bm_block");
+    if(pos){
+        return 7;
+    }
+    pos = strstr(cadena,"tree");
+    if(pos){
+        return 8;
+    }
+    pos = strstr(cadena,"sb");
+    if(pos){
+        return 9;
+    }
+    pos = strstr(cadena,"file");
+    if(pos){
+        return 10;
+    }
+    pos = strstr(cadena,"ls+i");
+    if(pos){
+        return 11;
+    }
+    pos = strstr(cadena,"ls+s");
+    if(pos){
+        return 12;
+    }
+    return 0;
+}
+
+
 int parametros(char *token){
 
     char cadena[100];
@@ -672,6 +1146,14 @@ int parametros(char *token){
     pos = strstr(cadena,"+add");
     if(pos){
         return 8;
+    }
+    pos = strstr(cadena,"-id");
+    if(pos){
+        return 9;
+    }
+    pos = strstr(cadena,"+ruta");
+    if(pos){
+        return 10;
     }
     return 0;
 }
@@ -752,5 +1234,8 @@ int opcion(char *token){
         return 7;
     if(strcmp(cadena, "exit")==0)
         return 8;
+    if(strstr(cadena,"#")==0){
+        return -1;
+    }
     return 0;
 }
